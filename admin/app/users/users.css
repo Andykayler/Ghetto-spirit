@@ -1,0 +1,38 @@
+/* app/users/users.css */
+.dashboard-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem 2.5rem;
+  max-width: 1400px;
+  width: 100%;
+}
+
+.page-header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: white;
+}
+
+.role-badge {
+  background: rgba(212, 160, 23, 0.2);
+  color: var(--gold);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+}
+
+.users-table th, .users-table td {
+  padding: 1.2rem 1.5rem;
+}
+
+.status-badge.active { background: #22c55e; color: black; }
+.status-badge.inactive { background: #ef4444; color: white; }
+
+/* Reuse same responsive styles as other pages */
+@media (max-width: 1024px) {
+  .dashboard-main { margin-left: 0; padding: 2rem 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  .users-table { overflow-x: auto; display: block; white-space: nowrap; }
+}
