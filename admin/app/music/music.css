@@ -94,20 +94,23 @@
   border-color: var(--gold);
 }
 
-/* Table */
+/* ==================== TABLE IMPROVEMENTS ==================== */
+
 .table-card {
   padding: 0;
   overflow: hidden;
+  border-radius: 16px;
 }
 
 .music-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 820px;           /* Balanced width */
 }
 
 .music-table th {
   text-align: left;
-  padding: 1.2rem 1.5rem;
+  padding: 1.1rem 1rem;
   color: #aaa;
   font-weight: 500;
   background: rgba(0, 0, 0, 0.3);
@@ -115,13 +118,15 @@
 }
 
 .music-table td {
-  padding: 1.2rem 1.5rem;
+  padding: 1.1rem 1rem;
   border-bottom: 1px solid rgba(212, 160, 23, 0.1);
   color: white;
+  vertical-align: middle;
 }
 
 .song-title-cell {
   font-weight: 600;
+  min-width: 220px;
 }
 
 .song-info {
@@ -154,17 +159,21 @@
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .action-btn {
   background: transparent;
   border: 1px solid rgba(212, 160, 23, 0.3);
   color: #ccc;
-  padding: 8px;
+  padding: 7px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover {
@@ -197,14 +206,36 @@
   }
 
   .music-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+    min-width: 750px;
   }
 }
 
 @media (max-width: 480px) {
   .page-header h1 {
     font-size: 2.4rem;
+  }
+
+  .music-table th,
+  .music-table td {
+    padding: 0.95rem 0.7rem;
+    font-size: 0.93rem;
+  }
+
+  .song-info {
+    gap: 8px;
+  }
+
+  .action-buttons {
+    gap: 4px;
+  }
+
+  .action-btn {
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .music-table {
+    min-width: 680px;   /* Better fit for phones */
   }
 }

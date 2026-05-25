@@ -12,18 +12,11 @@ export default function Dashboard() {
       <Sidebar />
 
       <div className="dashboard-main">
-        {/* Welcome Section with Quick Link */}
+        {/* Welcome Section */}
         <div className="welcome-section">
-          <div className="welcome-header">
-            <div>
-              <h1>Good Evening, Admin</h1>
-              <p>Welcome back to your empire. Everything is running smoothly.</p>
-            </div>
-            <Link href="/artists">
-              <button className="manage-artists-btn">
-                Manage Artists
-              </button>
-            </Link>
+          <div>
+            <h1>Good Evening, Admin</h1>
+            <p>Welcome back to your empire. Everything is running smoothly.</p>
           </div>
         </div>
 
@@ -129,11 +122,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="bottom-grid">
-          <RecentActivity />
-          <QuickActions />
-        </div>
+        
       </div>
     </div>
   );
