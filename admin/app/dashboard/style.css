@@ -1,0 +1,195 @@
+/* app/dashboard/style.css */
+
+.dashboard-container {
+  min-height: 100vh;
+  background-color: var(--black);
+  display: flex;
+}
+
+.dashboard-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem 2.5rem;
+  max-width: 1400px;
+  width: 100%;
+  transition: margin-left 0.4s ease;
+}
+
+/* Welcome */
+.welcome-section {
+  margin-bottom: 3rem;
+}
+
+.welcome-section h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.2rem;
+  color: white;
+  margin: 0;
+}
+
+.welcome-section p {
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+/* Stats Grid - Now 6 cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background-color: var(--black-mid);
+  border: 1px solid rgba(212, 160, 23, 0.2);
+  border-radius: 24px;
+  padding: 2rem;
+  transition: all 0.4s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(212, 160, 23, 0.4);
+}
+
+.stat-card h3 {
+  color: #aaa;
+  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+
+.stat-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.9rem;
+  color: var(--gold);
+  margin: 0 0 0.5rem 0;
+  line-height: 1;
+}
+
+.stat-change {
+  font-size: 0.9rem;
+}
+
+.positive { color: #22c55e; }
+
+/* Overview Grid */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.content-card {
+  background-color: var(--black-mid);
+  border: 1px solid rgba(212, 160, 23, 0.2);
+  border-radius: 24px;
+  padding: 2rem;
+}
+
+.content-card h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.1rem;
+  color: white;
+  margin-bottom: 1.5rem;
+}
+
+/* Song List */
+.song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(212, 160, 23, 0.1);
+}
+
+.song-item:last-child {
+  border-bottom: none;
+}
+
+.song-rank {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--gold);
+  width: 28px;
+}
+
+.song-info .song-title {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+.song-info .song-artist {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 2px 0 0 0;
+}
+
+.upload-status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.new {
+  background-color: #22c55e;
+  color: black;
+}
+
+/* Bottom Grid */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1024px) {
+  .dashboard-main {
+    margin-left: 0;
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .overview-grid,
+  .bottom-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .content-card {
+    padding: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-section h1 {
+    font-size: 2.3rem;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+  }
+
+  .dashboard-main {
+    padding: 1.2rem 1rem;
+  }
+}
