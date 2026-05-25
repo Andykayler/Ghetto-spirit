@@ -33,7 +33,7 @@
   margin-top: 8px;
 }
 
-/* Stats Grid - Now 6 cards */
+/* Stats Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -95,6 +95,24 @@
   font-size: 2.1rem;
   color: white;
   margin-bottom: 1.5rem;
+}
+
+/* View All Link - Improved Design */
+.view-all-link {
+  color: var(--gold);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-all-link:hover {
+  color: #f5d24a;
+  transform: translateX(6px);
+  text-decoration: underline;
 }
 
 /* Song List */
@@ -191,5 +209,9 @@
 
   .dashboard-main {
     padding: 1.2rem 1rem;
+  }
+
+  .view-all-link {
+    font-size: 0.9rem;
   }
 }
