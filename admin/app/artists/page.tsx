@@ -4,12 +4,14 @@ import Sidebar from "../../components/NavBar/Sidebar";
 import { useState } from "react";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import "./artists.css";
+import AddArtistModal from "./addartist";   // Import the modal
 
 export default function ArtistsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);   // ← Modal state
 
-  // Sample data (you can replace with real data later)
+  // Sample data
   const artists = [
     { id: 1, name: "Lil Zulu", image: "/images/artists/lilzulu.jpg", streams: "12.4M", songs: 45, status: "verified", joined: "Jan 2024" },
     { id: 2, name: "Mama Africa", image: "/images/artists/mamaafrica.jpg", streams: "8.9M", songs: 32, status: "verified", joined: "Mar 2024" },
@@ -31,7 +33,7 @@ export default function ArtistsPage() {
       <div className="dashboard-main">
         <div className="page-header">
           <h1>Artist Management</h1>
-          <button className="add-btn">
+          <button className="add-btn" onClick={() => setShowAddModal(true)}>
             <Plus size={20} />
             Add New Artist
           </button>
@@ -50,13 +52,22 @@ export default function ArtistsPage() {
           </div>
 
           <div className="filters">
-            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+            <button 
+              className={`filter-btn ${filter === 'all' ? 'active' : ''}`} 
+              onClick={() => setFilter('all')}
+            >
               All
             </button>
-            <button className={`filter-btn ${filter === 'verified' ? 'active' : ''}`} onClick={() => setFilter('verified')}>
+            <button 
+              className={`filter-btn ${filter === 'verified' ? 'active' : ''}`} 
+              onClick={() => setFilter('verified')}
+            >
               Verified
             </button>
-            <button className={`filter-btn ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>
+            <button 
+              className={`filter-btn ${filter === 'pending' ? 'active' : ''}`} 
+              onClick={() => setFilter('pending')}
+            >
               Pending
             </button>
           </div>
@@ -105,6 +116,12 @@ export default function ArtistsPage() {
           </table>
         </div>
       </div>
+
+      {/* Add Artist Modal */}
+      <AddArtistModal 
+        isOpen={showAddModal} 
+        onClose={() => setShowAddModal(false)} 
+      />
     </div>
   );
 }
