@@ -1,0 +1,247 @@
+/* app/music/upload.css */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.upload-modal {
+  background: var(--black-mid);
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  border-radius: 24px;
+  width: 90%;
+  max-width: 560px;
+  max-height: 92vh;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
+  animation: modalPop 0.4s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.92) translateY(40px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ==================== STICKY HEADER ==================== */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.8rem 2.4rem 1.4rem;
+  border-bottom: 1px solid rgba(212, 160, 23, 0.15);
+  background: var(--black-mid);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-logo {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+.modal-header h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.4rem;
+  color: white;
+  margin: 0;
+  letter-spacing: 1.2px;
+}
+
+/* Scrollable Content */
+.modal-content {
+  overflow-y: auto;
+  padding: 0 2.4rem 2.4rem;
+  flex: 1;
+}
+
+/* Form */
+.upload-form .form-group {
+  margin-bottom: 1.6rem;
+}
+
+.upload-form label {
+  display: block;
+  color: #bbb;
+  margin-bottom: 8px;
+  font-size: 0.97rem;
+  font-weight: 500;
+}
+
+.required { color: #ff4d4d; }
+
+/* Inputs */
+.upload-form input[type="text"],
+.upload-form select {
+  width: 100%;
+  background: var(--black);
+  border: 1px solid rgba(212, 160, 23, 0.25);
+  border-radius: 12px;
+  padding: 16px 18px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.upload-form input:focus,
+.upload-form select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.18);
+}
+
+.upload-form input:hover,
+.upload-form select:hover {
+  border-color: rgba(212, 160, 23, 0.4);
+}
+
+.upload-form input::placeholder {
+  color: #666;
+}
+
+/* Select Arrow */
+.upload-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23d4a017' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-position: right 18px center;
+  background-repeat: no-repeat;
+  padding-right: 45px;
+}
+
+/* File Input */
+.file-input-wrapper {
+  position: relative;
+  height: 58px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(212, 160, 23, 0.25);
+  background: var(--black);
+}
+
+.file-input-wrapper:hover {
+  border-color: var(--gold);
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.file-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  color: #ccc;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.file-placeholder svg {
+  color: var(--gold);
+}
+
+/* Cover Preview */
+.cover-preview {
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 160, 23, 0.3);
+}
+
+.cover-preview img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+/* Form Row */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+}
+
+/* Buttons */
+.modal-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(212, 160, 23, 0.15);
+}
+
+.cancel-btn, .upload-submit-btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(212, 160, 23, 0.3);
+  color: #ccc;
+}
+
+.cancel-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.upload-submit-btn {
+  background: var(--gold);
+  color: black;
+  border: none;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.upload-submit-btn:hover {
+  background: #f0c040;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(212, 160, 23, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .upload-modal {
+    margin: 10px;
+    max-height: 96vh;
+  }
+  .modal-header {
+    padding: 1.6rem 1.8rem 1.2rem;
+  }
+  .modal-content {
+    padding: 0 1.8rem 1.8rem;
+  }
+  .cover-preview img {
+    height: 160px;
+  }
+}
