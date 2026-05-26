@@ -1,0 +1,170 @@
+/* app/login/style.css */
+
+.login-container {
+  min-height: 100vh;
+  background-color: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--black-mid);
+  border: 1px solid rgba(212, 160, 23, 0.25);
+  border-radius: 28px;
+  padding: 48px 40px;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-logo h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.8rem;
+  letter-spacing: 6px;
+  color: var(--gold);
+  margin: 0;
+  line-height: 1;
+}
+
+.login-logo p {
+  color: #777;
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+.login-heading {
+  text-align: center;
+  margin-bottom: 2.2rem;
+}
+
+.login-heading h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.6rem;
+  color: white;
+  margin: 0;
+}
+
+.login-heading p {
+  color: #999;
+  margin-top: 8px;
+  font-size: 1rem;
+}
+
+/* Form Styles */
+.login-form label {
+  display: block;
+  color: #aaa;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.login-input {
+  width: 100%;
+  background-color: var(--black-card);
+  border: 1px solid rgba(212, 160, 23, 0.15);
+  border-radius: 16px;
+  padding: 18px 22px;
+  color: white;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+}
+
+.login-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.08);
+  outline: none;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  background-color: var(--gold);
+  color: black;
+  font-weight: 700;
+  padding: 18px;
+  border-radius: 16px;
+  font-size: 1.15rem;
+  letter-spacing: 1px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+/* Forgot Password Link */
+.forgot-link {
+  color: var(--gold);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.forgot-link:hover {
+  color: var(--gold-light);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Create Account Link */
+.signup-link {
+  text-align: center;
+  margin-top: 30px;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.signup-link a {
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.signup-link a:hover {
+  color: var(--gold-light);
+}
+
+.signup-link a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background-color: var(--gold-light);
+  transition: width 0.3s ease;
+}
+
+.signup-link a:hover::after {
+  width: 100%;
+}
