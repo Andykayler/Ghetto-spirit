@@ -3,7 +3,7 @@
 .dashboard-main {
   flex: 1;
   margin-left: 280px;
-  padding: 2rem 2.5rem;
+  padding: 2rem 1.8rem;        /* Further reduced side padding */
   max-width: 1400px;
   width: 100%;
   transition: margin-left 0.4s ease;
@@ -13,24 +13,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.6rem;
 }
 
 .page-header h1 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 3rem;
+  font-size: 2.8rem;
   color: white;
   margin: 0;
 }
 
+/* Add User Button */
+.add-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gold);
+  color: black;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.add-user-btn:hover {
+  background: #f0c040;
+  transform: translateY(-2px);
+}
+
 /* Controls */
 .controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  margin-bottom: 1.6rem;
 }
 
 .search-box {
@@ -39,8 +58,8 @@
   background: var(--black-mid);
   border: 1px solid rgba(212, 160, 23, 0.2);
   border-radius: 12px;
-  padding: 12px 16px;
-  width: 360px;
+  padding: 10px 14px;
+  width: 320px;
   color: #ccc;
 }
 
@@ -53,68 +72,75 @@
   width: 100%;
 }
 
-/* Table */
+/* ==================== TABLE ==================== */
 .table-card {
   padding: 0;
   overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 160, 23, 0.15);
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .users-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;           /* Important for better control */
+  min-width: 820px;              /* Reduced significantly */
 }
 
 .users-table th {
   text-align: left;
-  padding: 1.2rem 1.5rem;
+  padding: 0.85rem 0.9rem;       /* Much tighter padding */
   color: #aaa;
   font-weight: 500;
   background: rgba(0, 0, 0, 0.3);
   border-bottom: 1px solid rgba(212, 160, 23, 0.2);
+  font-size: 0.95rem;
 }
 
 .users-table td {
-  padding: 1.2rem 1.5rem;
+  padding: 0.85rem 0.9rem;
   border-bottom: 1px solid rgba(212, 160, 23, 0.1);
   color: white;
+  font-size: 0.96rem;
 }
 
-.role-badge {
-  background: rgba(212, 160, 23, 0.2);
-  color: var(--gold);
-  padding: 6px 14px;
+/* Column Width Control */
+.users-table th:nth-child(1), .users-table td:nth-child(1) { width: 22%; }  /* User */
+.users-table th:nth-child(2), .users-table td:nth-child(2) { width: 24%; }  /* Email */
+.users-table th:nth-child(3), .users-table td:nth-child(3) { width: 12%; }  /* Role */
+.users-table th:nth-child(4), .users-table td:nth-child(4) { width: 12%; }  /* Joined */
+.users-table th:nth-child(5), .users-table td:nth-child(5) { width: 11%; }  /* Streams */
+.users-table th:nth-child(6), .users-table td:nth-child(6) { width: 10%; }  /* Status */
+.users-table th:nth-child(7), .users-table td:nth-child(7) { width: 9%; }   /* Actions */
+
+/* Badges */
+.role-badge, .status-badge {
+  padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
-.status-badge {
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
+.status-badge.active { background: #22c55e; color: black; }
+.status-badge.inactive { background: #ef4444; color: white; }
 
-.status-badge.active {
-  background: #22c55e;
-  color: black;
-}
-
-.status-badge.inactive {
-  background: #ef4444;
-  color: white;
-}
-
+/* Actions */
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 5px;
+  justify-content: center;
 }
 
 .action-btn {
   background: transparent;
   border: 1px solid rgba(212, 160, 23, 0.3);
   color: #ccc;
-  padding: 8px;
+  padding: 6px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s;
@@ -135,7 +161,7 @@
 @media (max-width: 1024px) {
   .dashboard-main {
     margin-left: 0;
-    padding: 2rem 1.5rem;
+    padding: 1.8rem 1.4rem;
   }
 }
 
@@ -149,15 +175,28 @@
     width: 100%;
   }
 
-  .users-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .add-user-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 0.8rem 0.7rem;
   }
 }
 
 @media (max-width: 480px) {
   .page-header h1 {
     font-size: 2.4rem;
+  }
+  .dashboard-main {
+    padding: 1.4rem 1rem;
   }
 }

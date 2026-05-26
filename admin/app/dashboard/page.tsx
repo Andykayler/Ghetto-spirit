@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "../../components/NavBar/Sidebar";
+import Sidebar from "../../components/Sidebar/Sidebar";
 import RecentActivity from "../../components/Actions/RecentActivity";
 import QuickActions from "../../components/Actions/QuickActions";
 import Link from "next/link";

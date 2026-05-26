@@ -1,4 +1,4 @@
-/* app/artists/addartist.css */
+/* app/users/adduser.css */
 
 .modal-overlay {
   position: fixed;
@@ -11,16 +11,16 @@
   backdrop-filter: blur(10px);
 }
 
-.add-artist-modal {
+.add-user-modal {
   background: var(--black-mid);
   border: 1px solid rgba(212, 160, 23, 0.4);
   border-radius: 24px;
   width: 90%;
-  max-width: 680px;
+  max-width: 580px;
   max-height: 92vh;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
   animation: modalPop 0.4s ease;
-  overflow: hidden; /* Important for sticky header */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -30,7 +30,7 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* ==================== STICKY HEADER ==================== */
+/* Sticky Header */
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -41,7 +41,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  flex-shrink: 0; /* Prevents shrinking */
+  flex-shrink: 0;
 }
 
 .modal-header-left {
@@ -64,7 +64,7 @@
   letter-spacing: 1.2px;
 }
 
-/* Scrollable Content Area */
+/* Scrollable Content */
 .modal-content {
   overflow-y: auto;
   padding: 0 2.2rem 2.2rem;
@@ -72,11 +72,11 @@
 }
 
 /* Form */
-.add-artist-form .form-group {
+.add-user-form .form-group {
   margin-bottom: 1.6rem;
 }
 
-.add-artist-form label {
+.add-user-form label {
   display: block;
   color: #bbb;
   margin-bottom: 8px;
@@ -86,7 +86,6 @@
 
 .required { color: #ff4d4d; }
 
-/* Two Column Layout */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -94,10 +93,9 @@
 }
 
 /* Inputs */
-.add-artist-form input[type="text"],
-.add-artist-form input[type="number"],
-.add-artist-form select,
-.add-artist-form textarea {
+.add-user-form input[type="text"],
+.add-user-form input[type="email"],
+.add-user-form select {
   width: 100%;
   background: var(--black);
   border: 1px solid rgba(212, 160, 23, 0.25);
@@ -109,17 +107,10 @@
   outline: none;
 }
 
-.add-artist-form input:focus,
-.add-artist-form select:focus,
-.add-artist-form textarea:focus {
+.add-user-form input:focus,
+.add-user-form select:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.18);
-}
-
-.add-artist-form textarea {
-  min-height: 120px;
-  resize: vertical;
-  font-family: inherit;
 }
 
 /* File Input */
@@ -167,7 +158,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(212, 160, 23, 0.3);
-  height: 210px;
+  height: 200px;
 }
 
 .profile-preview img {
@@ -225,14 +216,12 @@
   .form-row {
     grid-template-columns: 1fr;
   }
-  .add-artist-modal {
+  .add-user-modal {
     margin: 10px;
     max-height: 96vh;
   }
-  .modal-header {
-    padding: 1.6rem 1.8rem 1.2rem;
-  }
-  .modal-content {
-    padding: 0 1.8rem 1.8rem;
+  .modal-header, .modal-content {
+    padding-left: 1.8rem;
+    padding-right: 1.8rem;
   }
 }

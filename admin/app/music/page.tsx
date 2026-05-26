@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "../../components/NavBar/Sidebar";
+import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState } from "react";
 import { Plus, Search, Play, Edit, Trash2, Download } from "lucide-react";
 import MusicPlayerBar from "../../components/MusicPlayerBar";
