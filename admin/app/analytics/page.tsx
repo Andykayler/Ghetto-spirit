@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "../../components/NavBar/Sidebar";
+import Sidebar from "../../components/Sidebar/Sidebar";
 import "./analytics.css";
 
 export default function AnalyticsPage() {

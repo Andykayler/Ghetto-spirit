@@ -1,7 +1,7 @@
 
 "use client";
 
-import Sidebar from "../../components/NavBar/Sidebar";
+import Sidebar from "../../components/Sidebar/Sidebar";
 import { DollarSign } from "lucide-react";
 import "./revenue.css";
 

@@ -3,20 +3,27 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { usePathname } from "next/navigation";   // ← Added this
-import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { 
+  Menu, X, Home, Users, Music, UserPlus, BarChart3, 
+  DollarSign, Settings, LogOut, User 
+} from "lucide-react";
 import "./style.css";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();   // Gets current URL
+  const pathname = usePathname();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const closeSidebar = () => setIsOpen(false);
 
-  // Helper function to check active link
-  const isActive = (href: string) => {
-    return pathname === href;
+  const isActive = (href: string) => pathname === href;
+
+  const handleLogout = () => {
+    if (confirm("Are you sure you want to logout?")) {
+      alert("Logged out successfully! (Demo)");
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -50,14 +57,16 @@ export default function Sidebar() {
             className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <Home size={20} />
             Dashboard
           </Link>
-          
+
           <Link 
             href="/artists" 
             className={`sidebar-link ${isActive('/artists') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <UserPlus size={20} />
             Artists
           </Link>
 
@@ -66,6 +75,7 @@ export default function Sidebar() {
             className={`sidebar-link ${isActive('/music') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <Music size={20} />
             Music Library
           </Link>
 
@@ -74,6 +84,7 @@ export default function Sidebar() {
             className={`sidebar-link ${isActive('/users') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <Users size={20} />
             Users
           </Link>
 
@@ -82,6 +93,7 @@ export default function Sidebar() {
             className={`sidebar-link ${isActive('/analytics') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <BarChart3 size={20} />
             Analytics
           </Link>
 
@@ -90,24 +102,50 @@ export default function Sidebar() {
             className={`sidebar-link ${isActive('/revenue') ? 'active' : ''}`}
             onClick={closeSidebar}
           >
+            <DollarSign size={20} />
             Revenue
+          </Link>
+
+          {/* Profile Link Added */}
+          <Link 
+            href="/profile" 
+            className={`sidebar-link ${isActive('/profile') ? 'active' : ''}`}
+            onClick={closeSidebar}
+          >
+            <User size={20} />
+            Profile
+          </Link>
+
+          <Link 
+            href="/settings" 
+            className={`sidebar-link ${isActive('/settings') ? 'active' : ''}`}
+            onClick={closeSidebar}
+          >
+            <Settings size={20} />
+            Settings
           </Link>
         </div>
 
+        {/* Footer with Logout */}
         <div className="sidebar-footer">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#D4A017] rounded-full flex items-center justify-center text-black font-bold text-xl">
+          <div className="admin-info">
+            <div className="admin-avatar">
               A
             </div>
             <div>
-              <p className="text-white text-sm">Admin</p>
-              <p className="text-gray-500 text-xs">admin@ghettospirit.com</p>
+              <p className="admin-name">Admin</p>
+              <p className="admin-email">admin@ghettospirit.com</p>
             </div>
           </div>
+
+          <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={18} />
+            Logout
+          </button>
         </div>
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Mobile Overlay */}
       {isOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
     </>
   );
