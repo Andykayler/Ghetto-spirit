@@ -1,5 +1,5 @@
 "use client";
-import { X, User } from "lucide-react";
+import { X, User, Upload } from "lucide-react";
 import { useState } from "react";
 import "./addartist.css";
 
@@ -12,8 +12,50 @@ interface AddArtistModalProps {
   onClose: () => void;
 }
 
+const UPLOAD_URL = "https://upload.titramw.com/upload.php";
+
+async function uploadToServer(
+  file: File, 
+  folder: string = "", 
+  onProgress: (msg: string) => void
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (folder) formData.append("folder", folder); // Send folder to PHP
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        onProgress(`${pct}%`);
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.url) resolve(res.url);
+        else reject(new Error(res.error || "Upload failed"));
+      } catch {
+        reject(new Error("Invalid server response"));
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(new Error("Cannot connect to upload server"));
+    });
+
+    xhr.open("POST", UPLOAD_URL);
+    xhr.timeout = 90000;
+    xhr.send(formData);
+  });
+}
+
 export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps) {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState<string>("");
 
   const [artistName, setArtistName] = useState("");
   const [genre, setGenre] = useState("");
@@ -23,12 +65,14 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
   const [bio, setBio] = useState("");
   const [profileFileName, setProfileFileName] = useState("");
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [profileFile, setProfileFile] = useState<File | null>(null);
 
   if (!isOpen) return null;
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setProfileFile(file);
       setProfileFileName(file.name);
       const reader = new FileReader();
       reader.onload = (ev) => setProfilePreview(ev.target?.result as string);
@@ -38,9 +82,22 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!artistName || !location || !bio || !profileFile) {
+      return toast.error("Please fill all required fields and select a profile picture");
+    }
+
     setLoading(true);
+    setProgress("");
 
     try {
+      setProgress("Uploading profile picture...");
+      const imageUrl = await uploadToServer(
+        profileFile, 
+        "artists",           // ← Different folder for profile pictures
+        (p) => setProgress(`Profile Upload: ${p}`)
+      );
+
+      setProgress("Saving artist...");
       await addDoc(collection(db, "artists"), {
         name: artistName,
         genre: genre,
@@ -53,34 +110,37 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
         songs: 0,
         joined: new Date().getFullYear() + "",
         createdAt: serverTimestamp(),
-        image: null, // We'll add image upload later
+        image: imageUrl,        // ← Now saving the uploaded image URL
       });
 
       toast.success("✅ Artist added successfully!");
       onClose();
+      resetForm();
 
-      // Reset form
-      setArtistName("");
-      setGenre("");
-      setAge("");
-      setGender("");
-      setLocation("");
-      setBio("");
-      setProfileFileName("");
-      setProfilePreview(null);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Failed to add artist");
+      toast.error(error.message || "Failed to add artist");
     } finally {
       setLoading(false);
+      setProgress("");
     }
+  };
+
+  const resetForm = () => {
+    setArtistName("");
+    setGenre("");
+    setAge("");
+    setGender("");
+    setLocation("");
+    setBio("");
+    setProfileFileName("");
+    setProfilePreview(null);
+    setProfileFile(null);
   };
 
   return (
     <div className="modal-overlay">
       <div className="add-artist-modal">
-        
         <div className="modal-header">
           <div className="modal-header-left">
             <img src="/images/logo.png" alt="Ghetto Spirit Logo" className="modal-logo" />
@@ -93,7 +153,8 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
 
         <div className="modal-content">
           <form className="add-artist-form" onSubmit={handleSubmit}>
-            
+            {/* ... your existing form fields ... */}
+
             <div className="form-row">
               <div className="form-group">
                 <label>Artist Name <span className="required">*</span></label>
@@ -129,6 +190,7 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               </div>
             </div>
 
+            {/* Age & Gender */}
             <div className="form-row">
               <div className="form-group">
                 <label>Age</label>
@@ -164,6 +226,7 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               />
             </div>
 
+            {/* Profile Picture Upload */}
             <div className="form-group">
               <label>Profile Picture <span className="required">*</span></label>
               <div className="file-input-wrapper">
@@ -196,12 +259,18 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               />
             </div>
 
+            {progress && (
+              <p style={{ color: "#aaa", fontSize: "0.9rem", margin: "10px 0" }}>
+                {progress}
+              </p>
+            )}
+
             <div className="modal-actions">
-              <button type="button" className="cancel-btn" onClick={onClose}>
+              <button type="button" className="cancel-btn" onClick={onClose} disabled={loading}>
                 Cancel
               </button>
               <button type="submit" className="add-submit-btn" disabled={loading}>
-                {loading ? "Adding..." : "Add Artist"}
+                {loading ? "Uploading..." : "Add Artist"}
               </button>
             </div>
           </form>

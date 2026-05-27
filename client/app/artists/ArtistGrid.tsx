@@ -24,7 +24,12 @@ interface ArtistGridProps {
   activeCategory?: string;
 }
 
-export function ArtistGrid({ searchQuery = "", selectedGenre = "ALL GENRES", activeCategory = "ALL ARTISTS" }: ArtistGridProps) {
+export function ArtistGrid({ 
+  searchQuery = "", 
+  selectedGenre = "ALL GENRES", 
+  activeCategory = "ALL ARTISTS" 
+}: ArtistGridProps) {
+  
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,17 +42,20 @@ export function ArtistGrid({ searchQuery = "", selectedGenre = "ALL GENRES", act
       setArtists(data);
       setLoading(false);
     });
+
     return () => unsub();
   }, []);
 
   const filtered = artists.filter((a) => {
     const matchesCat =
       activeCategory === "ALL ARTISTS" ||
-      (activeCategory === "TRENDING" && parseInt(a.streams) > 10000) ||
+      (activeCategory === "TRENDING" && parseInt(a.streams || "0") > 10000) ||
       (activeCategory === "NEW" && a.joined === new Date().getFullYear().toString()) ||
       (activeCategory === "VERIFIED" && a.status === "verified");
+
     const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = selectedGenre === "ALL GENRES" || a.genre === selectedGenre;
+
     return matchesCat && matchesSearch && matchesGenre;
   });
 

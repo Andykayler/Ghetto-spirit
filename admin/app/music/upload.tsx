@@ -1,9 +1,9 @@
 "use client";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./upload.css";
 
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
 
@@ -12,7 +12,11 @@ interface UploadModalProps {
   onClose: () => void;
 }
 
-// ✅ UPDATED URL
+interface Artist {
+  id: string;
+  name: string;
+}
+
 const UPLOAD_URL = "https://upload.titramw.com/upload.php";
 
 async function uploadToServer(file: File, onProgress: (msg: string) => void): Promise<string> {
@@ -56,11 +60,31 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [coverFileName, setCoverFileName] = useState<string>("");
   const [genre, setGenre] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [artistId, setArtistId] = useState<string>("");
   const [artistName, setArtistName] = useState<string>("");
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<string>("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchArtists = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "artists"));
+        const list: Artist[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: (doc.data() as any).name,
+        }));
+        setArtists(list);
+      } catch (err) {
+        console.error("Failed to fetch artists", err);
+        toast.error("Could not load artists");
+      }
+    };
+    fetchArtists();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -83,9 +107,17 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
     }
   };
 
+  const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    setArtistId(selectedId);
+    const selected = artists.find((a) => a.id === selectedId);
+    setArtistName(selected?.name || "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!audioFile || !coverFile) return toast.error("Please select both files");
+    if (!artistId) return toast.error("Please select an artist");
 
     setLoading(true);
     try {
@@ -97,8 +129,13 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
       setProgress("Saving song...");
       await addDoc(collection(db, "songs"), {
-        title, artist: artistName, genre,
-        audioUrl, coverUrl, streams: 0,
+        title,
+        artist: artistName,
+        artistId,
+        genre,
+        audioUrl,
+        coverUrl,
+        streams: 0,
         createdAt: serverTimestamp(),
       });
 
@@ -115,9 +152,15 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
   };
 
   const resetForm = () => {
-    setTitle(""); setArtistName(""); setGenre("");
-    setAudioFile(null); setCoverFile(null);
-    setAudioFileName(""); setCoverFileName(""); setCoverPreview(null);
+    setTitle("");
+    setArtistId("");
+    setArtistName("");
+    setGenre("");
+    setAudioFile(null);
+    setCoverFile(null);
+    setAudioFileName("");
+    setCoverFileName("");
+    setCoverPreview(null);
   };
 
   return (
@@ -135,52 +178,108 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
         <div className="modal-content">
           <form className="upload-form" onSubmit={handleSubmit}>
-            {/* Form fields unchanged - same as before */}
             <div className="form-group">
               <label>Song Title <span className="required">*</span></label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label>Artist Name <span className="required">*</span></label>
-              <input type="text" value={artistName} onChange={(e) => setArtistName(e.target.value)} required />
+              <label>Artist <span className="required">*</span></label>
+              <select value={artistId} onChange={handleArtistChange} required>
+                <option value="">Select Artist</option>
+                {artists.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label>Audio File <span className="required">*</span></label>
                 <div className="file-input-wrapper">
-                  <input type="file" accept="audio/mp3,audio/wav,audio/mpeg" onChange={handleAudioChange} required />
-                  <div className="file-placeholder"><Upload size={20} /><span>{audioFileName || "Choose Audio"}</span></div>
+                  <input
+                    type="file"
+                    accept="audio/mp3,audio/wav,audio/mpeg"
+                    onChange={handleAudioChange}
+                    required
+                  />
+                  <div className="file-placeholder">
+                    <Upload size={20} />
+                    <span>{audioFileName || "Choose Audio"}</span>
+                  </div>
                 </div>
               </div>
 
               <div className="form-group">
                 <label>Cover Photo <span className="required">*</span></label>
                 <div className="file-input-wrapper">
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverChange} required />
-                  <div className="file-placeholder"><ImageIcon size={20} /><span>{coverFileName || "Choose Cover"}</span></div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleCoverChange}
+                    required
+                  />
+                  <div className="file-placeholder">
+                    <ImageIcon size={20} />
+                    <span>{coverFileName || "Choose Cover"}</span>
+                  </div>
                 </div>
-                {coverPreview && <div className="cover-preview"><img src={coverPreview} alt="preview" /></div>}
+                {coverPreview && (
+                  <div className="cover-preview">
+                    <img src={coverPreview} alt="preview" />
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="form-group">
               <label>Genre <span className="required">*</span></label>
-              <input type="text" list="genre-list" value={genre} onChange={(e) => setGenre(e.target.value)} required />
+              <input
+                type="text"
+                list="genre-list"
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                required
+              />
               <datalist id="genre-list">
-                <option value="Hip Hop" /><option value="Afrobeat" /><option value="Trap" />
-                <option value="R&B" /><option value="Reggae" /><option value="Afrobeats" />
-                <option value="Amapiano" /><option value="Pop" /><option value="Dancehall" />
+                <option value="Hip Hop" />
+                <option value="Afrobeat" />
+                <option value="Trap" />
+                <option value="R&B" />
+                <option value="Reggae" />
+                <option value="Afrobeats" />
+                <option value="Amapiano" />
+                <option value="Pop" />
+                <option value="Dancehall" />
                 <option value="Highlife" />
               </datalist>
             </div>
 
-            {progress && <p style={{color:"#aaa", fontSize:"0.9rem"}}>{progress}</p>}
+            {progress && (
+              <p style={{ color: "#aaa", fontSize: "0.9rem" }}>{progress}</p>
+            )}
 
             <div className="modal-actions">
-              <button type="button" className="cancel-btn" onClick={onClose} disabled={loading}>Cancel</button>
-              <button type="submit" className="upload-submit-btn" disabled={loading}>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="upload-submit-btn"
+                disabled={loading}
+              >
                 {loading ? "Uploading..." : "Upload Song"}
               </button>
             </div>

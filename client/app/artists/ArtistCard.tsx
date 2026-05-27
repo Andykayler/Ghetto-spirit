@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CrownIcon, ArrowRightIcon, InstagramIcon, YoutubeIcon, SpotifyIcon, AppleMusicIcon } from "./Icons";
 
 interface Artist {
@@ -16,6 +17,12 @@ interface Artist {
 }
 
 export function ArtistCard({ artist }: { artist: Artist }) {
+  const [imageError, setImageError] = useState(false);
+
+  const imageSrc = artist.image && !imageError 
+    ? artist.image 
+    : `https://placehold.co/280x330/0a0a0a/C9A84C?text=${encodeURIComponent(artist.name.charAt(0))}`;
+
   return (
     <div
       style={{
@@ -34,10 +41,10 @@ export function ArtistCard({ artist }: { artist: Artist }) {
         (e.currentTarget as HTMLDivElement).style.borderColor = "#1e1e1e";
       }}
     >
-      {/* ── Image ── */}
+      {/* ── Image Section ── */}
       <div style={{ position: "relative", width: "100%", paddingBottom: "118%", flexShrink: 0 }}>
         <img
-          src={artist.image ?? ""}
+          src={imageSrc}
           alt={artist.name}
           style={{
             position: "absolute",
@@ -49,10 +56,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
             display: "block",
             transition: "transform 0.5s ease",
           }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              `https://placehold.co/280x330/0a0a0a/C9A84C?text=${encodeURIComponent(artist.name)}`;
-          }}
+          onError={() => setImageError(true)}
           onMouseEnter={(e) => {
             (e.target as HTMLImageElement).style.transform = "scale(1.04)";
           }}
@@ -60,6 +64,8 @@ export function ArtistCard({ artist }: { artist: Artist }) {
             (e.target as HTMLImageElement).style.transform = "scale(1)";
           }}
         />
+
+        {/* Gradient Overlay */}
         <div
           style={{
             position: "absolute",
@@ -71,7 +77,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
         />
       </div>
 
-      {/* ── Card body ── */}
+      {/* ── Card Body ── */}
       <div style={{ padding: "10px 14px 12px 14px", display: "flex", flexDirection: "column", gap: 0 }}>
 
         {/* Name + Crown */}
@@ -90,7 +96,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           <CrownIcon />
         </div>
 
-        {/* Genre instead of role */}
+        {/* Genre */}
         <p
           style={{
             fontFamily: "'Barlow Condensed', sans-serif",
@@ -105,7 +111,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           {artist.genre}
         </p>
 
-        {/* VIEW PROFILE button */}
+        {/* View Profile Button */}
         <button
           style={{
             width: "100%",
@@ -136,7 +142,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           VIEW PROFILE <ArrowRightIcon />
         </button>
 
-        {/* Social icons */}
+        {/* Social Icons */}
         <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           {[InstagramIcon, YoutubeIcon, SpotifyIcon, AppleMusicIcon].map((Icon, i) => (
             <button
@@ -162,7 +168,6 @@ export function ArtistCard({ artist }: { artist: Artist }) {
             </button>
           ))}
         </div>
-
       </div>
     </div>
   );
