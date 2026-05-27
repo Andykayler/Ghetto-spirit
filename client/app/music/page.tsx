@@ -1,11 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import { PlayerProvider } from "./PlayerContext";
 import { MusicHero } from "./MusicHero";
-import { FeaturedVideos } from "./FeaturedVideos";
-import MusicPlayerBar from "@/components/MusicPlayerBar";
+import { FeaturedSongs } from "./FeaturedVideos";
 import { ExpandedPlayer } from "./ExpandedPlayer";
+
+// Prevents ANY server-side rendering of the player bar
+const MusicPlayerBar = dynamic(() => import("../../components/MusicPlayerBar"), {
+  ssr: false,
+});
 
 export default function MusicVideosPage() {
   return (
@@ -25,14 +30,8 @@ export default function MusicVideosPage() {
           <Navbar />
           <div style={{ height: 70, flexShrink: 0 }} />
           <MusicHero />
-          <FeaturedVideos />
-
-          {/* Sticky bottom bar */}
-          <div style={{ position: "sticky", bottom: 0, zIndex: 50, boxShadow: "0 -4px 40px rgba(0,0,0,0.7)" }}>
-            <MusicPlayerBar />
-          </div>
-
-          {/* Full-screen expanded player */}
+          <FeaturedSongs />
+          <MusicPlayerBar />
           <ExpandedPlayer />
         </main>
       </PlayerProvider>
