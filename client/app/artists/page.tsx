@@ -53,8 +53,11 @@ export default function ArtistsPage() {
         />
 
         <section className="px-10 py-10" style={{ background: "#0A0A0A", flex: 1 }}>
-          <ArtistGrid artists={filtered} />
-        </section>
+<ArtistGrid
+  searchQuery={searchQuery}
+  selectedGenre={selectedGenre}
+  activeCategory={activeCategory}
+/>        </section>
 
         <JoinCTA />
 

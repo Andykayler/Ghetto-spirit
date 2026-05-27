@@ -1,12 +1,7 @@
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Category =
-  | "ALL ARTISTS"
-  | "RAPPERS"
-  | "SINGERS"
-  | "PRODUCERS"
-  | "DJS"
-  | "SONGWRITERS";
+   "ALL ARTISTS";
 
 export interface Artist {
   id: number;
@@ -19,21 +14,20 @@ export interface Artist {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 export const ARTISTS: Artist[] = [
-  { id: 1, name: "YOUNG LEGEND", role: "RAPPER",   category: "RAPPERS",   image: "/images/young-legend.jpg" },
-  { id: 2, name: "LADY RYDER",   role: "RAPPER",   category: "RAPPERS",   image: "/images/lady-ryder.jpg"   },
-  { id: 3, name: "KING DRE",     role: "RAPPER",   category: "RAPPERS",   image: "/images/king-dre.jpg"     },
-  { id: 4, name: "REAL BEATZ",   role: "PRODUCER", category: "PRODUCERS", image: "/images/real-beatz.jpg"   },
-  { id: 5, name: "NIA VOX",      role: "SINGER",   category: "SINGERS",   image: "/images/nia-vox.jpg"      },
-  { id: 6, name: "DJ SPIRIT",    role: "DJ",       category: "DJS",       image: "/images/dj-spirit.jpg"    },
+  {
+    id: 1, name: "YOUNG LEGEND", role: "RAPPER", image: "/images/young-legend.jpg",
+    category: "ALL ARTISTS"
+  },
+  { id: 2, name: "LADY RYDER",   role: "RAPPER",   category: "ALL ARTISTS",   image: "/images/lady-ryder.jpg"   },
+  { id: 3, name: "KING DRE",     role: "RAPPER",   category: "ALL ARTISTS",   image: "/images/king-dre.jpg"     },
+  { id: 4, name: "REAL BEATZ",   role: "PRODUCER", category: "ALL ARTISTS", image: "/images/real-beatz.jpg"   },
+  { id: 5, name: "NIA VOX",      role: "SINGER",   category: "ALL ARTISTS",   image: "/images/nia-vox.jpg"      },
+  { id: 6, name: "DJ SPIRIT",    role: "DJ",       category: "ALL ARTISTS",       image: "/images/dj-spirit.jpg"    },
 ];
 
 export const CATEGORIES: Category[] = [
   "ALL ARTISTS",
-  "RAPPERS",
-  "SINGERS",
-  "PRODUCERS",
-  "DJS",
-  "SONGWRITERS",
+ 
 ];
 
 export const GENRES = [
