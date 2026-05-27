@@ -63,14 +63,18 @@ export default function ProfilePage() {
     .slice(0, 2);
 
   return (
-    <div className="app-shell">
+    <div className="dash-shell">
       <Sidebar />
-      <main className="profile-main">
+
+      <main className="dash-main profile-main">
         {/* Page Header */}
-        <div className="profile-page-header">
+        <div className="dash-header">
           <div>
-            <p className="profile-page-label">MY ACCOUNT</p>
-            <h1 className="profile-page-title">Profile Settings</h1>
+            <p className="dash-eyebrow">ACCOUNT</p>
+            <h1 className="dash-title">
+              Profile <span className="dash-title-gold">Settings</span>
+            </h1>
+            <p className="dash-subtitle">Manage your admin account</p>
           </div>
 
           <button
@@ -94,7 +98,7 @@ export default function ProfilePage() {
         )}
 
         <div className="profile-grid">
-          {/* ── Left: Avatar Card ── */}
+          {/* Left: Avatar Card */}
           <div className="profile-card avatar-card">
             <div className="avatar-glow-wrap">
               <div className="avatar-ring">
@@ -141,7 +145,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ── Right: Form Cards ── */}
+          {/* Right: Form Cards */}
           <div className="profile-right">
             {/* Personal Info */}
             <div className="profile-card info-card">
@@ -282,7 +286,6 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* Strength bar */}
                 {passwords.newPw && (
                   <div className="pw-strength-wrap full-width">
                     <div className="pw-strength-bar">

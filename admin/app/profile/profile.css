@@ -11,7 +11,326 @@
   flex: 1;
   margin-left: 260px; /* match sidebar width */
   padding: 2.4rem 2.8rem;
-  max-width: 1100px;
+  max-width: 1100px;@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+/* ======================== SHELL ======================== */
+.dash-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+}
+
+.dash-main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2.6rem 3rem;
+  max-width: 1200px;
+  box-sizing: border-box;
+}
+
+/* ======================== HEADER ======================== */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.8rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.dash-eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #d4a017;
+  font-weight: 500;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.dash-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  color: white;
+  margin: 0 0 6px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.dash-title-gold {
+  background: linear-gradient(90deg, #c8900a, #f0c040, #d4a017);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dash-subtitle {
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+/* ======================== SAVE BUTTON ======================== */
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #d4a017;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  align-self: flex-start;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #f0c040;
+  transform: translateY(-2px);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-btn.saved {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #0a0a0a;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ======================== SAVE BANNER ======================== */
+.save-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  border-radius: 12px;
+  padding: 0.9rem 1.4rem;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+/* ======================== PROFILE GRID ======================== */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ======================== CARDS ======================== */
+.profile-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 20px;
+  padding: 2rem;
+  transition: border-color 0.3s;
+}
+
+.profile-card:hover {
+  border-color: rgba(212,160,23,0.3);
+}
+
+/* Avatar Card */
+.avatar-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-glow-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.avatar-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212,160,23,0.3), rgba(212,160,23,0.08));
+  border: 4px solid #d4a017;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 0 8px rgba(212,160,23,0.1);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-initials {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: #d4a017;
+}
+
+.avatar-change-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 36px;
+  height: 36px;
+  background: #d4a017;
+  color: #0a0a0a;
+  border: 3px solid #0a0a0a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.avatar-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  margin: 0.8rem 0 0.3rem;
+}
+
+.avatar-role-badge {
+  background: rgba(212,160,23,0.15);
+  color: #d4a017;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.avatar-email {
+  color: #777;
+  margin-top: 0.4rem;
+}
+
+.avatar-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.8rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(212,160,23,0.1);
+  width: 100%;
+}
+
+/* Right Side */
+.profile-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Form Styles */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.6rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212,160,23,0.1);
+}
+
+.card-header h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.45rem;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap input,
+.form-group textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(212,160,23,0.2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem 0.85rem 2.6rem;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.input-wrap input:focus,
+.form-group textarea:focus {
+  border-color: #d4a017;
+  background: rgba(212,160,23,0.05);
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dash-main {
+    margin-left: 0;
+    padding: 5rem 1.8rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 }
 
 @media (max-width: 768px) {

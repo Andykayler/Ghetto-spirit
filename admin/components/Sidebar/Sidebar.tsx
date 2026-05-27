@@ -35,15 +35,10 @@ export default function Sidebar() {
     return pathname === href;
   };
 
+  // Updated Logout - Calls the dedicated /logout page
   const handleLogout = () => {
-    const confirmLogout = window.confirm(
-      "Are you sure you want to logout?"
-    );
-
-    if (confirmLogout) {
-      alert("Logged out successfully! (Demo)");
-      window.location.href = "/login";
-    }
+    closeSidebar();
+    window.location.href = "/logout";   // Direct navigation to logout page
   };
 
   return (
@@ -79,9 +74,7 @@ export default function Sidebar() {
           {/* Dashboard */}
           <Link
             href="/dashboard"
-            className={`sidebar-link ${
-              isActive("/dashboard") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/dashboard") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <Home size={20} />
@@ -91,9 +84,7 @@ export default function Sidebar() {
           {/* Artists */}
           <Link
             href="/artists"
-            className={`sidebar-link ${
-              isActive("/artists") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/artists") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <UserPlus size={20} />
@@ -103,9 +94,7 @@ export default function Sidebar() {
           {/* Music */}
           <Link
             href="/music"
-            className={`sidebar-link ${
-              isActive("/music") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/music") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <Music size={20} />
@@ -115,9 +104,7 @@ export default function Sidebar() {
           {/* Users */}
           <Link
             href="/users"
-            className={`sidebar-link ${
-              isActive("/users") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/users") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <Users size={20} />
@@ -127,9 +114,7 @@ export default function Sidebar() {
           {/* Analytics */}
           <Link
             href="/analytics"
-            className={`sidebar-link ${
-              isActive("/analytics") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/analytics") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <BarChart3 size={20} />
@@ -139,9 +124,7 @@ export default function Sidebar() {
           {/* Revenue */}
           <Link
             href="/revenue"
-            className={`sidebar-link ${
-              isActive("/revenue") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/revenue") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <DollarSign size={20} />
@@ -151,9 +134,7 @@ export default function Sidebar() {
           {/* Profile */}
           <Link
             href="/profile"
-            className={`sidebar-link ${
-              isActive("/profile") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/profile") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <User size={20} />
@@ -163,9 +144,7 @@ export default function Sidebar() {
           {/* Settings */}
           <Link
             href="/settings"
-            className={`sidebar-link ${
-              isActive("/settings") ? "active" : ""
-            }`}
+            className={`sidebar-link ${isActive("/settings") ? "active" : ""}`}
             onClick={closeSidebar}
           >
             <Settings size={20} />
@@ -178,19 +157,14 @@ export default function Sidebar() {
 
           {/* Admin Info */}
           <div className="admin-info">
-            <div className="admin-avatar">
-              A
-            </div>
-
+            <div className="admin-avatar">A</div>
             <div className="admin-details">
               <p className="admin-name">Admin</p>
-              <p className="admin-email">
-                admin@ghettospirit.com
-              </p>
+              <p className="admin-email">admin@ghettospirit.com</p>
             </div>
           </div>
 
-          {/* Logout */}
+          {/* Logout Button */}
           <button
             className="logout-btn"
             onClick={handleLogout}
