@@ -1,15 +1,19 @@
-import { Artist } from "./types";
 import { CrownIcon, ArrowRightIcon, InstagramIcon, YoutubeIcon, SpotifyIcon, AppleMusicIcon } from "./Icons";
 
-// ─── Artist Card ──────────────────────────────────────────────────────────────
-// Matches design image:
-//   - Dark #0a0a0a card body, 1px #1e1e1e border
-//   - Tall portrait image (~72% of card height), heavy bottom gradient bleeding into body
-//   - Name (Bebas Neue ~22px white) + inline crown icon
-//   - Role (Barlow Condensed, #666, uppercase tiny)
-//   - VIEW PROFILE — full width gold border button, compact 30px, arrow right
-//   - 4 social icons: Instagram, YouTube, Spotify, Apple Music — grey, small, left-aligned
-// ──────────────────────────────────────────────────────────────────────────────
+interface Artist {
+  id: string;
+  name: string;
+  genre: string;
+  age: number | null;
+  gender: string;
+  location: string;
+  bio: string;
+  status: string;
+  streams: string;
+  songs: number;
+  joined: string;
+  image: string | null;
+}
 
 export function ArtistCard({ artist }: { artist: Artist }) {
   return (
@@ -30,10 +34,10 @@ export function ArtistCard({ artist }: { artist: Artist }) {
         (e.currentTarget as HTMLDivElement).style.borderColor = "#1e1e1e";
       }}
     >
-      {/* ── Image — tall portrait, heavy gradient ── */}
+      {/* ── Image ── */}
       <div style={{ position: "relative", width: "100%", paddingBottom: "118%", flexShrink: 0 }}>
         <img
-          src={artist.image}
+          src={artist.image ?? ""}
           alt={artist.name}
           style={{
             position: "absolute",
@@ -56,7 +60,6 @@ export function ArtistCard({ artist }: { artist: Artist }) {
             (e.target as HTMLImageElement).style.transform = "scale(1)";
           }}
         />
-        {/* Heavy bottom gradient — bleeds deep up the image */}
         <div
           style={{
             position: "absolute",
@@ -87,7 +90,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           <CrownIcon />
         </div>
 
-        {/* Role */}
+        {/* Genre instead of role */}
         <p
           style={{
             fontFamily: "'Barlow Condensed', sans-serif",
@@ -99,7 +102,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
             margin: "0 0 10px 0",
           }}
         >
-          {artist.role}
+          {artist.genre}
         </p>
 
         {/* VIEW PROFILE button */}
