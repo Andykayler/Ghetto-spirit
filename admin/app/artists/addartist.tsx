@@ -3,14 +3,17 @@ import { X, User } from "lucide-react";
 import { useState } from "react";
 import "./addartist.css";
 
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "react-hot-toast";
+
 interface AddArtistModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps) {
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
-  const [profileFileName, setProfileFileName] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const [artistName, setArtistName] = useState("");
   const [genre, setGenre] = useState("");
@@ -18,24 +21,10 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
   const [gender, setGender] = useState("");
   const [location, setLocation] = useState("");
   const [bio, setBio] = useState("");
+  const [profileFileName, setProfileFileName] = useState("");
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
 
   if (!isOpen) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert("✅ Artist added successfully! (Demo)");
-    onClose();
-
-    // Reset form
-    setProfilePreview(null);
-    setProfileFileName("");
-    setArtistName("");
-    setGenre("");
-    setAge("");
-    setGender("");
-    setLocation("");
-    setBio("");
-  };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,17 +36,54 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await addDoc(collection(db, "artists"), {
+        name: artistName,
+        genre: genre,
+        age: age ? parseInt(age) : null,
+        gender: gender,
+        location: location,
+        bio: bio,
+        status: "pending",
+        streams: "0",
+        songs: 0,
+        joined: new Date().getFullYear() + "",
+        createdAt: serverTimestamp(),
+        image: null, // We'll add image upload later
+      });
+
+      toast.success("✅ Artist added successfully!");
+      onClose();
+
+      // Reset form
+      setArtistName("");
+      setGenre("");
+      setAge("");
+      setGender("");
+      setLocation("");
+      setBio("");
+      setProfileFileName("");
+      setProfilePreview(null);
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add artist");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="modal-overlay">
       <div className="add-artist-modal">
-        {/* Sticky Header */}
+        
         <div className="modal-header">
           <div className="modal-header-left">
-            <img
-              src="/images/logo.png"
-              alt="Ghetto Spirit Logo"
-              className="modal-logo"
-            />
+            <img src="/images/logo.png" alt="Ghetto Spirit Logo" className="modal-logo" />
             <h2>Add New Artist</h2>
           </div>
           <button className="close-modal-btn" onClick={onClose}>
@@ -65,9 +91,9 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="modal-content">
           <form className="add-artist-form" onSubmit={handleSubmit}>
+            
             <div className="form-row">
               <div className="form-group">
                 <label>Artist Name <span className="required">*</span></label>
@@ -138,7 +164,6 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               />
             </div>
 
-            {/* Profile Picture */}
             <div className="form-group">
               <label>Profile Picture <span className="required">*</span></label>
               <div className="file-input-wrapper">
@@ -161,7 +186,6 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               )}
             </div>
 
-            {/* Bio */}
             <div className="form-group">
               <label>Artist Bio <span className="required">*</span></label>
               <textarea
@@ -176,8 +200,8 @@ export default function AddArtistModal({ isOpen, onClose }: AddArtistModalProps)
               <button type="button" className="cancel-btn" onClick={onClose}>
                 Cancel
               </button>
-              <button type="submit" className="add-submit-btn">
-                Add Artist
+              <button type="submit" className="add-submit-btn" disabled={loading}>
+                {loading ? "Adding..." : "Add Artist"}
               </button>
             </div>
           </form>

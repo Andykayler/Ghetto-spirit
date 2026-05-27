@@ -1,0 +1,123 @@
+.landing-container {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-content {
+  text-align: center;
+  z-index: 2;
+  max-width: 820px;
+  padding: 2rem 1.5rem;
+}
+
+/* ==================== LOGO ==================== */
+.landing-logo {
+  margin-bottom: 4rem;
+  text-align: center;
+}
+
+.logo-image {
+  filter: drop-shadow(0 15px 25px rgba(212, 160, 23, 0.25));
+  transition: transform 0.6s ease;
+}
+
+.landing-logo:hover .logo-image {
+  transform: scale(1.05);
+}
+
+.landing-logo .admin-text {
+  color: #888;
+  font-size: 0.95rem;
+  letter-spacing: 8px;
+  margin-top: 16px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ==================== HERO TEXT ==================== */
+.hero-text h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 5.2rem;
+  line-height: 1.05;
+  letter-spacing: 6px;
+  margin-bottom: 1.2rem;
+  background: linear-gradient(90deg, #f8f8f8, #d4a017, #f8f8f8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tagline {
+  font-size: 1.35rem;
+  color: #bbb;
+  line-height: 1.45;
+  margin-bottom: 3.8rem;
+  font-weight: 400;
+}
+
+/* ==================== BUTTON ==================== */
+.enter-btn {
+  background: var(--gold);
+  color: black;
+  font-weight: 700;
+  font-size: 1.3rem;
+  padding: 22px 56px;
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  box-shadow: 0 15px 35px rgba(212, 160, 23, 0.35);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enter-btn:hover {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 20px 45px rgba(212, 160, 23, 0.5);
+  background: var(--gold-light);
+}
+
+/* ==================== SUBTEXT ==================== */
+.subtext {
+  margin-top: 3rem;
+  color: #666;
+  font-size: 1rem;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+}
+
+/* Bottom Fade */
+.bottom-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: linear-gradient(transparent, #0a0a0a 70%);
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hero-text h1 {
+    font-size: 3.8rem;
+    letter-spacing: 4px;
+  }
+  
+  .tagline {
+    font-size: 1.15rem;
+  }
+  
+  .enter-btn {
+    padding: 18px 40px;
+    font-size: 1.1rem;
+  }
+}
