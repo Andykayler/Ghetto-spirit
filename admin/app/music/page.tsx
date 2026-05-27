@@ -1,82 +1,134 @@
 "use client";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Play, Edit, Trash2, Download } from "lucide-react";
 import MusicPlayerBar from "../../components/MusicPlayerBar";
 import UploadModal from "./upload";
-import EditModal from "./edit";           // ← New
-import DeleteConfirmModal from "./delete-confirm"; // ← New
+import EditModal from "./edit";
+import DeleteConfirmModal from "./delete-confirm";
 import "./music.css";
 
+import {
+  collection,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "react-hot-toast";
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  genre?: string;
+  audioUrl?: string;
+  coverUrl?: string;
+  streams?: number;
+  createdAt?: any;
+  duration?: string;
+}
+
 export default function MusicLibrary() {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<any>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<any>(null);
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  // Sample Music Data
-  const [songs, setSongs] = useState([
-    { 
-      id: 1, 
-      title: "Night in the Ghetto", 
-      artist: "Lil Zulu", 
-      streams: "2.3M", 
-      duration: "3:45", 
-      uploaded: "2 days ago", 
-      status: "published",
-      cover: "/images/covers/night-in-ghetto.jpg" 
-    },
-    // ... rest of your songs
-    { id: 2, title: "Street Prayer", artist: "Mama Africa", streams: "1.9M", duration: "4:12", uploaded: "1 week ago", status: "published", cover: "/images/covers/street-prayer.jpg" },
-    { id: 3, title: "Hustle Season", artist: "Trap King", streams: "1.6M", duration: "3:28", uploaded: "3 days ago", status: "published", cover: "/images/covers/hustle-season.jpg" },
-    { id: 4, title: "New Flame", artist: "FireBoy", streams: "892K", duration: "3:50", uploaded: "Today", status: "pending", cover: "/images/covers/new-flame.jpg" },
-    { id: 5, title: "Ghetto Love", artist: "Queen V", streams: "1.1M", duration: "4:05", uploaded: "5 days ago", status: "published", cover: "/images/covers/ghetto-love.jpg" },
-  ]);
+  useEffect(() => {
+    const q = query(collection(db, "songs"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as Song[];
+        setSongs(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Firestore error:", error);
+        toast.error("Failed to load songs");
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, []);
 
-  const filteredSongs = songs.filter(song => {
-    const matchesSearch = 
-      song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      song.artist.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === "all" || song.status === filter;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredSongs = songs.filter((song) =>
+    song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    song.artist.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handlePlay = (song: any) => {
-    setCurrentlyPlaying(song);
-  };
+  const handlePlay = (song: Song) => setCurrentlyPlaying(song);
 
-  const handleEdit = (song: any) => {
+  const handleEdit = (song: Song) => {
     setSelectedSong(song);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (song: any) => {
+  const handleDeleteClick = (song: Song) => {
     setSelectedSong(song);
     setShowDeleteModal(true);
   };
 
-  const handleDownload = (song: any) => {
-    setDownloadingId(song.id);
-    
-    // Simulate download
-    setTimeout(() => {
-      alert(`✅ Downloading: ${song.title} by ${song.artist}`);
-      setDownloadingId(null);
-    }, 1200);
+  const confirmDelete = async () => {
+    if (!selectedSong) return;
+    try {
+      await deleteDoc(doc(db, "songs", selectedSong.id));
+      toast.success(`"${selectedSong.title}" deleted`);
+      if (currentlyPlaying?.id === selectedSong.id) setCurrentlyPlaying(null);
+    } catch (err) {
+      toast.error("Failed to delete song");
+      console.error(err);
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedSong(null);
+    }
   };
 
-  const confirmDelete = () => {
-    if (selectedSong) {
-      setSongs(songs.filter(s => s.id !== selectedSong.id));
-      alert(`🗑️ ${selectedSong.title} has been deleted`);
+  const handleDownload = async (song: Song) => {
+    if (!song.audioUrl) return toast.error("No audio file available");
+    setDownloadingId(song.id);
+    try {
+      const res = await fetch(song.audioUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${song.title} - ${song.artist}.mp3`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Download failed");
+    } finally {
+      setDownloadingId(null);
     }
-    setShowDeleteModal(false);
-    setSelectedSong(null);
+  };
+
+  const formatStreams = (n?: number) => {
+    if (!n) return "0";
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return String(n);
+  };
+
+  const formatDate = (ts: any) => {
+    if (!ts?.toDate) return "—";
+    const diff = (Date.now() - ts.toDate().getTime()) / 1000;
+    if (diff < 86400) return "Today";
+    if (diff < 172800) return "Yesterday";
+    if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+    return ts.toDate().toLocaleDateString();
   };
 
   return (
@@ -92,7 +144,6 @@ export default function MusicLibrary() {
           </button>
         </div>
 
-        {/* Search & Filters */}
         <div className="controls">
           <div className="search-box">
             <Search size={20} />
@@ -103,98 +154,121 @@ export default function MusicLibrary() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          <div className="filters">
-            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All Songs</button>
-            <button className={`filter-btn ${filter === 'published' ? 'active' : ''}`} onClick={() => setFilter('published')}>Published</button>
-            <button className={`filter-btn ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>Pending</button>
-          </div>
         </div>
 
-        {/* Music Table */}
         <div className="content-card table-card">
-          <table className="music-table">
-            <thead>
-              <tr>
-                <th>Song Title</th>
-                <th>Artist</th>
-                <th>Streams</th>
-                <th>Duration</th>
-                <th>Uploaded</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSongs.map((song) => (
-                <tr key={song.id}>
-                  <td className="song-title-cell">
-                    <div className="song-info">
-                      <Play 
-                        size={18} 
-                        className="play-icon" 
-                        onClick={() => handlePlay(song)}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <span>{song.title}</span>
-                    </div>
-                  </td>
-                  <td>{song.artist}</td>
-                  <td>{song.streams}</td>
-                  <td>{song.duration}</td>
-                  <td>{song.uploaded}</td>
-                  <td>
-                    <span className={`status-badge ${song.status}`}>
-                      {song.status === 'published' ? 'Published' : 'Pending'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="action-btn" onClick={() => handlePlay(song)} title="Play">
-                        <Play size={18} />
-                      </button>
-                      <button className="action-btn" onClick={() => handleEdit(song)} title="Edit">
-                        <Edit size={18} />
-                      </button>
-                      <button 
-                        className="action-btn" 
-                        onClick={() => handleDownload(song)}
-                        disabled={downloadingId === song.id}
-                        title="Download"
-                      >
-                        <Download size={18} />
-                      </button>
-                      <button className="action-btn delete" onClick={() => handleDeleteClick(song)} title="Delete">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+          {loading ? (
+            <p style={{ padding: "2rem", color: "var(--muted)" }}>
+              Loading songs...
+            </p>
+          ) : filteredSongs.length === 0 ? (
+            <p style={{ padding: "2rem", color: "var(--muted)" }}>
+              No songs found.
+            </p>
+          ) : (
+            <table className="music-table">
+              <thead>
+                <tr>
+                  <th>Song Title</th>
+                  <th>Artist</th>
+                  <th>Genre</th>
+                  <th>Streams</th>
+                  <th>Uploaded</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredSongs.map((song) => (
+                  <tr key={song.id}>
+                    <td className="song-title-cell">
+                      <div className="song-info">
+                        {song.coverUrl ? (
+                          <img
+                            src={song.coverUrl}
+                            alt={song.title}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 4,
+                              objectFit: "cover",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 4,
+                            background: "linear-gradient(135deg, #d4a017, #8b0000)",
+                            flexShrink: 0,
+                          }} />
+                        )}
+                        <span>{song.title}</span>
+                      </div>
+                    </td>
+                    <td>{song.artist}</td>
+                    <td>{song.genre || "—"}</td>
+                    <td>{formatStreams(song.streams)}</td>
+                    <td>{formatDate(song.createdAt)}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="action-btn"
+                          onClick={() => handlePlay(song)}
+                          title="Play"
+                        >
+                          <Play size={18} />
+                        </button>
+                        <button
+                          className="action-btn"
+                          onClick={() => handleEdit(song)}
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          className="action-btn"
+                          onClick={() => handleDownload(song)}
+                          disabled={downloadingId === song.id}
+                          title="Download"
+                        >
+                          <Download size={18} />
+                        </button>
+                        <button
+                          className="action-btn delete"
+                          onClick={() => handleDeleteClick(song)}
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* Music Player */}
       {currentlyPlaying && (
-        <MusicPlayerBar 
-          song={currentlyPlaying} 
-          onClose={() => setCurrentlyPlaying(null)} 
+        <MusicPlayerBar
+          song={currentlyPlaying}
+          onClose={() => setCurrentlyPlaying(null)}
         />
       )}
 
-      {/* Modals */}
-      <UploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} />
-      
-      <EditModal 
-        isOpen={showEditModal} 
-        onClose={() => setShowEditModal(false)} 
+      <UploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+      />
+      <EditModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
         song={selectedSong}
       />
-
-      <DeleteConfirmModal 
-        isOpen={showDeleteModal} 
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
         songTitle={selectedSong?.title}
