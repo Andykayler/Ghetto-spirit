@@ -2,22 +2,48 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePlayer, parseDuration, formatTime } from "./PlayerContext";
-import { VIDEOS, Video } from "./types";
+import type { Track, Comment, CommentReply } from "./PlayerContext";
 
 // ─── ExpandedPlayer ───────────────────────────────────────────────────────────
 export function ExpandedPlayer() {
   const {
-    currentVideo, playing, progress, volume, shuffle, repeat, expanded,
-    togglePlay, seek, next, prev, setVolume, toggleShuffle, cycleRepeat,
-    setExpanded, play, artistTrackCount, artistTracks, queueIndex, queue,
+    currentTrack,
+    playing,
+    progress,
+    volume,
+    shuffle,
+    repeat,
+    expanded,
+    togglePlay,
+    seek,
+    next,
+    prev,
+    setVolume,
+    toggleShuffle,
+    cycleRepeat,
+    setExpanded,
+    play,
+    artistTrackCount,
+    artistTracks,
+    queueIndex,
+    queue,
+    streamCounts,
+    likes,
+    toggleLike,
+    comments,
+    addComment,
+    voteComment,
+    addReply,
+    voteReply,
   } = usePlayer();
 
-  const [activeTab, setActiveTab] = useState<"queue" | "artist">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "artist" | "comments">("queue");
+  const [commentAuthor, setCommentAuthor] = useState("");
+  const [commentText, setCommentText] = useState("");
   const [waveHeights, setWaveHeights] = useState<number[]>(
     Array.from({ length: 60 }, (_, i) => 10 + Math.sin(i * 0.5) * 22 + Math.random() * 18)
   );
-
-  const waveRef = useRef<NodeJS.Timeout | null>(null);
+  const waveRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (waveRef.current) clearInterval(waveRef.current);
@@ -28,13 +54,23 @@ export function ExpandedPlayer() {
     return () => { if (waveRef.current) clearInterval(waveRef.current); };
   }, [playing]);
 
-  if (!expanded || !currentVideo) return null;
+  if (!expanded || !currentTrack) return null;
 
-  const totalSec = parseDuration(currentVideo.duration);
+  const totalSec = parseDuration(currentTrack.duration);
   const currentSec = Math.floor((progress / 100) * totalSec);
-  const artistCount = artistTrackCount(currentVideo.artist);
-  const artistSongs = artistTracks(currentVideo.artist);
+  const artistCount = artistTrackCount(currentTrack.artist);
+  const artistSongs = artistTracks(currentTrack.artist);
   const upNext = queue[(queueIndex + 1) % queue.length];
+  const coverSrc = currentTrack.coverUrl || currentTrack.thumbnail;
+  const streams = streamCounts[currentTrack.id] || 0;
+  const isLiked = likes[currentTrack.id] || false;
+  const trackComments = comments.filter(c => c.trackId === currentTrack.id);
+
+  const handleSubmitComment = () => {
+    if (!commentText.trim()) return;
+    addComment(currentTrack.id, commentAuthor, commentText);
+    setCommentText("");
+  };
 
   return (
     <>
@@ -50,44 +86,44 @@ export function ExpandedPlayer() {
       />
 
       {/* Panel */}
-      <div
-        style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-          height: "82vh",
-          background: "#0E0E0E",
-          borderTop: "1px solid rgba(212,175,55,0.3)",
-          display: "flex",
-          flexDirection: "column",
-          animation: "slideUp 0.35s cubic-bezier(0.22,1,0.36,1)",
-        }}
-      >
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+        height: "82vh",
+        background: "#0E0E0E",
+        borderTop: "1px solid rgba(212,175,55,0.3)",
+        display: "flex",
+        flexDirection: "column",
+        animation: "slideUp 0.35s cubic-bezier(0.22,1,0.36,1)",
+      }}>
         {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)", cursor: "pointer" }}
-            onClick={() => setExpanded(false)} />
+          <div
+            style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)", cursor: "pointer" }}
+            onClick={() => setExpanded(false)}
+            title="Close player"
+          />
         </div>
 
         {/* Main content */}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 380px", overflow: "hidden" }}>
-          
+
           {/* ── Left: Art + info + controls ── */}
-          <div style={{ padding: "28px 32px 28px", display: "flex", flexDirection: "column", gap: 24, overflowY: "auto", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-            
+          <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+
             {/* Art */}
             <div style={{ position: "relative", width: "100%", maxWidth: 300, aspectRatio: "1", margin: "0 auto" }}>
               <img
-                src={currentVideo.thumbnail}
-                alt={currentVideo.title}
+                src={coverSrc}
+                alt={currentTrack.title}
                 style={{
                   width: "100%", height: "100%", objectFit: "cover",
                   border: "2px solid rgba(212,175,55,0.4)",
+                  display: "block",
                   boxShadow: playing ? "0 0 40px rgba(212,175,55,0.25)" : "none",
-                  transition: "box-shadow 0.5s",
                   transform: playing ? "scale(1.02)" : "scale(1)",
                   transition: "transform 0.5s ease, box-shadow 0.5s ease",
                 }}
               />
-              {/* Playing pulse ring */}
               {playing && (
                 <div style={{
                   position: "absolute", inset: -6,
@@ -98,41 +134,73 @@ export function ExpandedPlayer() {
               )}
             </div>
 
-            {/* Song info */}
+            {/* Song info + like */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                <div>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
                   <div style={{
                     fontFamily: "'Bebas Neue', sans-serif",
                     fontSize: 24, color: "#FFFFFF", letterSpacing: "0.05em", lineHeight: 1.1,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
-                    {currentVideo.title.includes("–")
-                      ? currentVideo.title.split("–")[1].trim()
-                      : currentVideo.title}
+                    {currentTrack.title}
                   </div>
                   <div style={{
                     fontFamily: "'Barlow', sans-serif", fontSize: 14,
                     color: "rgba(255,255,255,0.55)", marginTop: 4,
                   }}>
-                    {currentVideo.artist}
-                    <span style={{ color: "rgba(212,175,55,0.7)", marginLeft: 8, fontSize: 12 }}>
-                      • {artistCount} track{artistCount !== 1 ? "s" : ""}
-                    </span>
+                    {currentTrack.artist}
+                    {artistCount > 0 && (
+                      <span style={{ color: "rgba(212,175,55,0.7)", marginLeft: 8, fontSize: 12 }}>
+                        • {artistCount} track{artistCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 18, padding: 4 }}
-                  title="Like">♡</button>
+
+                {/* Like button */}
+                <button
+                  onClick={() => toggleLike(currentTrack.id)}
+                  title={isLiked ? "Unlike" : "Like"}
+                  style={{
+                    background: isLiked ? "rgba(212,175,55,0.15)" : "none",
+                    border: isLiked ? "1px solid rgba(212,175,55,0.5)" : "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    color: isLiked ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                    fontSize: 20,
+                    padding: "4px 8px",
+                    flexShrink: 0,
+                    transition: "all 0.2s",
+                    transform: isLiked ? "scale(1.15)" : "scale(1)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                  onMouseEnter={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
+                  onMouseLeave={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
+                >
+                  {isLiked ? "♥" : "♡"}
+                </button>
               </div>
 
-              {/* Category badge */}
-              <span style={{
-                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-                fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "#D4AF37", border: "1px solid rgba(212,175,55,0.35)",
-                padding: "3px 8px", display: "inline-block", marginTop: 8,
-              }}>
-                {currentVideo.category}
-              </span>
+              {(currentTrack.genre || currentTrack.category) && (
+                <span style={{
+                  fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
+                  fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+                  color: "#D4AF37", border: "1px solid rgba(212,175,55,0.35)",
+                  padding: "3px 8px", display: "inline-block", marginTop: 6,
+                }}>
+                  {currentTrack.genre || currentTrack.category}
+                </span>
+              )}
+
+              {/* Stats row — plays + comments only, no minutes */}
+              <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+                <StatBadge value={streams} label="Plays" />
+                <StatBadge value={isLiked ? "♥" : "♡"} label="Liked" gold={isLiked} />
+                <StatBadge value={trackComments.length} label="Comments" />
+              </div>
             </div>
 
             {/* Waveform */}
@@ -157,7 +225,7 @@ export function ExpandedPlayer() {
               })}
             </div>
 
-            {/* Seek bar + time */}
+            {/* Seek bar + time — shows elapsed / total duration */}
             <div>
               <div
                 onClick={(e) => {
@@ -186,22 +254,19 @@ export function ExpandedPlayer() {
                   {formatTime(currentSec)}
                 </span>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.06em" }}>
-                  {currentVideo.duration}
+                  {currentTrack.duration || "--:--"}
                 </span>
               </div>
             </div>
 
             {/* Transport controls */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
-              {/* Shuffle */}
               <ControlBtn active={shuffle} onClick={toggleShuffle} title="Shuffle">
                 <ShuffleIcon />
               </ControlBtn>
-              {/* Prev */}
               <ControlBtn onClick={prev} title="Previous">
                 <PrevIcon />
               </ControlBtn>
-              {/* Play/Pause */}
               <button
                 onClick={togglePlay}
                 title={playing ? "Pause" : "Play"}
@@ -229,11 +294,9 @@ export function ExpandedPlayer() {
                   : <div style={{ width: 0, height: 0, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderLeft: "18px solid #0A0A0A", marginLeft: 4 }} />
                 }
               </button>
-              {/* Next */}
               <ControlBtn onClick={next} title="Next">
                 <NextIcon />
               </ControlBtn>
-              {/* Repeat */}
               <ControlBtn active={repeat !== "off"} onClick={cycleRepeat} title={`Repeat: ${repeat}`}>
                 {repeat === "one" ? <RepeatOneIcon /> : <RepeatIcon />}
               </ControlBtn>
@@ -262,35 +325,51 @@ export function ExpandedPlayer() {
 
           {/* ── Center: Tabs + content ── */}
           <div style={{ display: "flex", flexDirection: "column", borderRight: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
-            {/* Tabs */}
             <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-              {(["queue", "artist"] as const).map((tab) => (
+              {(["queue", "artist", "comments"] as const).map((tab) => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   style={{
                     flex: 1, padding: "16px 0",
                     fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-                    fontSize: 13, letterSpacing: "0.14em", textTransform: "uppercase",
+                    fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase",
                     background: "none", border: "none", cursor: "pointer",
                     color: activeTab === tab ? "#D4AF37" : "rgba(255,255,255,0.35)",
                     borderBottom: activeTab === tab ? "2px solid #D4AF37" : "2px solid transparent",
                     transition: "color 0.2s",
                   }}
                 >
-                  {tab === "queue" ? "Queue" : `Artist (${artistCount})`}
+                  {tab === "queue"
+                    ? `Queue (${queue.length})`
+                    : tab === "artist"
+                    ? `Artist (${artistCount})`
+                    : `Comments (${trackComments.length})`}
                 </button>
               ))}
             </div>
 
-            {/* Tab content */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-              {activeTab === "queue" ? (
+            <div style={{ flex: 1, overflowY: "auto", padding: activeTab === "comments" ? 0 : "8px 0" }}>
+              {activeTab === "queue" && (
                 <QueueTab queue={queue} currentIndex={queueIndex} onPlay={play} />
-              ) : (
+              )}
+              {activeTab === "artist" && (
                 <ArtistTab
-                  artist={currentVideo.artist}
-                  songs={artistSongs}
-                  currentId={currentVideo.id}
+                  artist={currentTrack.artist}
+                  tracks={artistSongs}
+                  currentId={currentTrack.id}
                   onPlay={play}
+                />
+              )}
+              {activeTab === "comments" && (
+                <CommentsTab
+                  comments={trackComments}
+                  author={commentAuthor}
+                  text={commentText}
+                  onAuthorChange={setCommentAuthor}
+                  onTextChange={setCommentText}
+                  onSubmit={handleSubmitComment}
+                  onVote={voteComment}
+                  onReply={addReply}
+                  onVoteReply={voteReply}
                 />
               )}
             </div>
@@ -307,33 +386,32 @@ export function ExpandedPlayer() {
             }}>
               Up Next
             </div>
-            {upNext && (
+
+            {upNext && upNext.id !== currentTrack.id && (
               <div
                 onClick={() => play(upNext)}
-                style={{
-                  padding: "16px 20px", cursor: "pointer",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  transition: "background 0.2s",
-                }}
+                style={{ padding: "16px 20px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "rgba(212,175,55,0.06)"}
                 onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
               >
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <img src={upNext.thumbnail} alt={upNext.title}
+                  <img
+                    src={upNext.coverUrl || upNext.thumbnail}
+                    alt={upNext.title}
                     style={{ width: 56, height: 56, objectFit: "cover", flexShrink: 0, border: "1px solid rgba(212,175,55,0.2)" }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, color: "#FFFFFF", letterSpacing: "0.05em", lineHeight: 1.2,
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, color: "#FFFFFF", letterSpacing: "0.05em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {upNext.title}
                     </div>
                     <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>
                       {upNext.artist}
                     </div>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, letterSpacing: "0.14em",
-                      color: "#D4AF37", marginTop: 4, textTransform: "uppercase" }}>
-                      {upNext.category}
-                    </div>
+                    {(upNext.genre || upNext.category) && (
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, letterSpacing: "0.14em", color: "#D4AF37", marginTop: 4, textTransform: "uppercase" }}>
+                        {upNext.genre || upNext.category}
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                     {upNext.duration}
@@ -342,22 +420,21 @@ export function ExpandedPlayer() {
               </div>
             )}
 
-            {/* Related suggestions */}
             <div style={{
               padding: "12px 20px 8px",
               fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
               fontSize: 11, letterSpacing: "0.22em", color: "rgba(255,255,255,0.35)",
               textTransform: "uppercase",
             }}>
-              More from {currentVideo.artist}
+              More from {currentTrack.artist}
             </div>
             <div style={{ overflowY: "auto", flex: 1 }}>
               {artistSongs
-                .filter((v) => v.id !== currentVideo.id)
-                .map((v) => (
-                  <MiniTrackRow key={v.id} video={v} onPlay={() => play(v)} />
+                .filter((t) => t.id !== currentTrack.id)
+                .map((t) => (
+                  <MiniTrackRow key={t.id} track={t} onPlay={() => play(t)} />
                 ))}
-              {artistSongs.filter((v) => v.id !== currentVideo.id).length === 0 && (
+              {artistSongs.filter((t) => t.id !== currentTrack.id).length === 0 && (
                 <div style={{ padding: "12px 20px", fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
                   No other tracks from this artist.
                 </div>
@@ -376,16 +453,378 @@ export function ExpandedPlayer() {
   );
 }
 
+// ─── StatBadge ────────────────────────────────────────────────────────────────
+function StatBadge({ value, label, gold = false }: { value: string | number; label: string; gold?: boolean }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)",
+      borderRadius: 6, padding: "6px 14px", minWidth: 64,
+    }}>
+      <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20, color: gold ? "#D4AF37" : "#D4AF37", lineHeight: 1 }}>
+        {value}
+      </span>
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, letterSpacing: "0.18em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginTop: 2 }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── CommentsTab ──────────────────────────────────────────────────────────────
+function CommentsTab({
+  comments,
+  author,
+  text,
+  onAuthorChange,
+  onTextChange,
+  onSubmit,
+  onVote,
+  onReply,
+  onVoteReply,
+}: {
+  comments: Comment[];
+  author: string;
+  text: string;
+  onAuthorChange: (v: string) => void;
+  onTextChange: (v: string) => void;
+  onSubmit: () => void;
+  onVote: (commentId: string, vote: "like" | "dislike") => void;
+  onReply: (commentId: string, author: string, text: string) => void;
+  onVoteReply: (commentId: string, replyId: string, vote: "like" | "dislike") => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Comment input */}
+      <div style={{
+        padding: "16px 20px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        flexShrink: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}>
+        <input
+          value={author}
+          onChange={e => onAuthorChange(e.target.value)}
+          placeholder="Your name (optional)"
+          style={inputStyle}
+        />
+        <div style={{ display: "flex", gap: 8 }}>
+          <textarea
+            value={text}
+            onChange={e => onTextChange(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(); } }}
+            placeholder="Add a comment…"
+            rows={2}
+            style={{ ...inputStyle, flex: 1, resize: "none" } as React.CSSProperties}
+          />
+          <button
+            onClick={onSubmit}
+            disabled={!text.trim()}
+            style={postBtnStyle(!!text.trim())}
+          >
+            Post
+          </button>
+        </div>
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
+          Press Enter to post
+        </div>
+      </div>
+
+      {/* Comments list */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        {comments.length === 0 ? (
+          <div style={{ padding: "32px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>💬</div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+              No comments yet. Be the first!
+            </div>
+          </div>
+        ) : (
+          comments.map(c => (
+            <CommentItem
+              key={c.id}
+              comment={c}
+              onVote={onVote}
+              onReply={onReply}
+              onVoteReply={onVoteReply}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── CommentItem ──────────────────────────────────────────────────────────────
+function CommentItem({
+  comment,
+  onVote,
+  onReply,
+  onVoteReply,
+}: {
+  comment: Comment;
+  onVote: (id: string, vote: "like" | "dislike") => void;
+  onReply: (commentId: string, author: string, text: string) => void;
+  onVoteReply: (commentId: string, replyId: string, vote: "like" | "dislike") => void;
+}) {
+  const [showReplyBox, setShowReplyBox] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replyAuthor, setReplyAuthor] = useState("");
+  const [replyText, setReplyText] = useState("");
+
+  const submitReply = () => {
+    if (!replyText.trim()) return;
+    onReply(comment.id, replyAuthor, replyText);
+    setReplyText("");
+    setShowReplyBox(false);
+    setShowReplies(true);
+  };
+
+  const avatarColor = `hsl(${(comment.author.charCodeAt(0) * 7) % 360}, 50%, 35%)`;
+
+  return (
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ padding: "14px 20px 10px" }}>
+        {/* Author row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: "50%",
+            background: avatarColor,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff",
+            flexShrink: 0,
+          }}>
+            {comment.author[0]?.toUpperCase() || "?"}
+          </div>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.1em", color: "#D4AF37" }}>
+            {comment.author}
+          </span>
+          <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", marginLeft: "auto" }}>
+            {new Date(comment.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+
+        {/* Text */}
+        <p style={{
+          fontFamily: "'Barlow', sans-serif", fontSize: 13,
+          color: "rgba(255,255,255,0.75)", margin: "0 0 10px 36px", lineHeight: 1.5,
+        }}>
+          {comment.text}
+        </p>
+
+        {/* Action row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, paddingLeft: 36 }}>
+          {/* Like */}
+          <VoteBtn
+            icon="👍"
+            count={comment.likes}
+            active={comment.userVote === "like"}
+            activeColor="#4ade80"
+            onClick={() => onVote(comment.id, "like")}
+          />
+          {/* Dislike */}
+          <VoteBtn
+            icon="👎"
+            count={comment.dislikes}
+            active={comment.userVote === "dislike"}
+            activeColor="#f87171"
+            onClick={() => onVote(comment.id, "dislike")}
+          />
+          {/* Reply toggle */}
+          <button
+            onClick={() => setShowReplyBox(r => !r)}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
+              fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
+              color: showReplyBox ? "#D4AF37" : "rgba(255,255,255,0.35)",
+              padding: "3px 6px",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)"; }}
+            onMouseLeave={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
+          >
+            ↩ Reply
+          </button>
+          {/* Show replies toggle */}
+          {comment.replies.length > 0 && (
+            <button
+              onClick={() => setShowReplies(r => !r)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
+                fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
+                color: "rgba(212,175,55,0.6)",
+                padding: "3px 6px",
+                transition: "color 0.2s",
+              }}
+            >
+              {showReplies ? "▲ Hide" : `▼ ${comment.replies.length} repl${comment.replies.length === 1 ? "y" : "ies"}`}
+            </button>
+          )}
+        </div>
+
+        {/* Reply input */}
+        {showReplyBox && (
+          <div style={{ marginTop: 10, paddingLeft: 36, display: "flex", flexDirection: "column", gap: 6 }}>
+            <input
+              value={replyAuthor}
+              onChange={e => setReplyAuthor(e.target.value)}
+              placeholder="Your name (optional)"
+              style={{ ...inputStyle, fontSize: 12 } as React.CSSProperties}
+            />
+            <div style={{ display: "flex", gap: 6 }}>
+              <textarea
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitReply(); } }}
+                placeholder="Write a reply…"
+                rows={2}
+                style={{ ...inputStyle, flex: 1, resize: "none", fontSize: 12 } as React.CSSProperties}
+              />
+              <button
+                onClick={submitReply}
+                disabled={!replyText.trim()}
+                style={postBtnStyle(!!replyText.trim())}
+              >
+                Post
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Replies */}
+      {showReplies && comment.replies.length > 0 && (
+        <div style={{ background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+          {comment.replies.map(reply => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              onVote={(vote) => onVoteReply(comment.id, reply.id, vote)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ReplyItem ────────────────────────────────────────────────────────────────
+function ReplyItem({
+  reply,
+  onVote,
+}: {
+  reply: CommentReply;
+  onVote: (vote: "like" | "dislike") => void;
+}) {
+  const avatarColor = `hsl(${(reply.author.charCodeAt(0) * 11) % 360}, 45%, 30%)`;
+  return (
+    <div style={{ padding: "10px 20px 10px 52px", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: "50%", background: avatarColor,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "'Bebas Neue', sans-serif", fontSize: 11, color: "#fff", flexShrink: 0,
+        }}>
+          {reply.author[0]?.toUpperCase() || "?"}
+        </div>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", color: "rgba(212,175,55,0.8)" }}>
+          {reply.author}
+        </span>
+        <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.18)", marginLeft: "auto" }}>
+          {new Date(reply.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+      <p style={{
+        fontFamily: "'Barlow', sans-serif", fontSize: 12,
+        color: "rgba(255,255,255,0.6)", margin: "0 0 8px 29px", lineHeight: 1.5,
+      }}>
+        {reply.text}
+      </p>
+      <div style={{ display: "flex", gap: 6, paddingLeft: 29 }}>
+        <VoteBtn icon="👍" count={reply.likes} active={reply.userVote === "like"} activeColor="#4ade80" onClick={() => onVote("like")} />
+        <VoteBtn icon="👎" count={reply.dislikes} active={reply.userVote === "dislike"} activeColor="#f87171" onClick={() => onVote("dislike")} />
+      </div>
+    </div>
+  );
+}
+
+// ─── VoteBtn ──────────────────────────────────────────────────────────────────
+function VoteBtn({
+  icon, count, active, activeColor, onClick,
+}: {
+  icon: string;
+  count: number;
+  active: boolean;
+  activeColor: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex", alignItems: "center", gap: 4,
+        background: active ? `${activeColor}18` : "rgba(255,255,255,0.04)",
+        border: active ? `1px solid ${activeColor}55` : "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 4, cursor: "pointer", padding: "3px 8px",
+        fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
+        fontSize: 12, color: active ? activeColor : "rgba(255,255,255,0.35)",
+        transition: "all 0.18s",
+        transform: active ? "scale(1.05)" : "scale(1)",
+      }}
+      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)"; }}
+      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
+    >
+      <span style={{ fontSize: 13 }}>{icon}</span>
+      {count > 0 && <span>{count}</span>}
+    </button>
+  );
+}
+
+// ─── Shared styles ────────────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.1)",
+  borderRadius: 4,
+  padding: "8px 12px",
+  color: "#fff",
+  fontFamily: "'Barlow', sans-serif",
+  fontSize: 13,
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
+};
+
+const postBtnStyle = (enabled: boolean): React.CSSProperties => ({
+  background: enabled ? "#D4AF37" : "rgba(212,175,55,0.2)",
+  border: "none",
+  borderRadius: 4,
+  color: enabled ? "#0A0A0A" : "rgba(255,255,255,0.3)",
+  cursor: enabled ? "pointer" : "default",
+  padding: "0 16px",
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontWeight: 700,
+  fontSize: 12,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  transition: "background 0.2s",
+  alignSelf: "stretch",
+  flexShrink: 0,
+});
+
 // ─── QueueTab ─────────────────────────────────────────────────────────────────
-function QueueTab({ queue, currentIndex, onPlay }: { queue: Video[]; currentIndex: number; onPlay: (v: Video) => void }) {
+function QueueTab({ queue, currentIndex, onPlay }: { queue: Track[]; currentIndex: number; onPlay: (t: Track) => void }) {
   return (
     <>
-      {queue.map((v, i) => {
+      {queue.map((t, i) => {
         const isCurrent = i === currentIndex;
         return (
           <div
-            key={v.id}
-            onClick={() => onPlay(v)}
+            key={`${t.id}-${i}`}
+            onClick={() => onPlay(t)}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "10px 20px", cursor: "pointer",
@@ -402,7 +841,7 @@ function QueueTab({ queue, currentIndex, onPlay }: { queue: Video[]; currentInde
                 : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{i + 1}</span>
               }
             </div>
-            <img src={v.thumbnail} alt={v.title}
+            <img src={t.coverUrl || t.thumbnail} alt={t.title}
               style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
@@ -411,14 +850,14 @@ function QueueTab({ queue, currentIndex, onPlay }: { queue: Video[]; currentInde
                 letterSpacing: "0.05em", lineHeight: 1.2,
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               }}>
-                {v.title}
+                {t.title}
               </div>
               <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                {v.artist}
+                {t.artist}
               </div>
             </div>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
-              {v.duration}
+              {t.duration}
             </span>
           </div>
         );
@@ -428,22 +867,21 @@ function QueueTab({ queue, currentIndex, onPlay }: { queue: Video[]; currentInde
 }
 
 // ─── ArtistTab ────────────────────────────────────────────────────────────────
-function ArtistTab({ artist, songs, currentId, onPlay }: { artist: string; songs: Video[]; currentId: string; onPlay: (v: Video) => void }) {
+function ArtistTab({ artist, tracks, currentId, onPlay }: { artist: string; tracks: Track[]; currentId: string; onPlay: (t: Track) => void }) {
   return (
     <div>
-      {/* Artist header */}
       <div style={{ padding: "16px 20px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
         <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: "#FFFFFF", letterSpacing: "0.07em" }}>{artist}</div>
         <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-          {songs.length} track{songs.length !== 1 ? "s" : ""} on Ghetto Spirit
+          {tracks.length} track{tracks.length !== 1 ? "s" : ""} in queue
         </div>
       </div>
-      {songs.map((v) => {
-        const isCurrent = v.id === currentId;
+      {tracks.map((t) => {
+        const isCurrent = t.id === currentId;
         return (
           <div
-            key={v.id}
-            onClick={() => onPlay(v)}
+            key={t.id}
+            onClick={() => onPlay(t)}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "10px 20px", cursor: "pointer",
@@ -454,16 +892,21 @@ function ArtistTab({ artist, songs, currentId, onPlay }: { artist: string; songs
             onMouseEnter={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
             onMouseLeave={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
           >
-            {isCurrent ? <PlayingBars /> : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)", width: 20, textAlign: "center", flexShrink: 0 }}>▶</span>}
-            <img src={v.thumbnail} alt={v.title}
+            {isCurrent
+              ? <PlayingBars />
+              : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)", width: 20, textAlign: "center", flexShrink: 0 }}>▶</span>
+            }
+            <img src={t.coverUrl || t.thumbnail} alt={t.title}
               style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 14, color: isCurrent ? "#D4AF37" : "#FFFFFF", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {v.title}
+                {t.title}
               </div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{v.category}</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                {t.genre || t.category}
+              </div>
             </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{v.duration}</span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{t.duration}</span>
           </div>
         );
       })}
@@ -472,28 +915,25 @@ function ArtistTab({ artist, songs, currentId, onPlay }: { artist: string; songs
 }
 
 // ─── MiniTrackRow ─────────────────────────────────────────────────────────────
-function MiniTrackRow({ video, onPlay }: { video: Video; onPlay: () => void }) {
+function MiniTrackRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
   return (
     <div
       onClick={onPlay}
-      style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "8px 20px",
-        cursor: "pointer", transition: "background 0.15s",
-      }}
+      style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", cursor: "pointer", transition: "background 0.15s" }}
       onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"}
       onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
     >
-      <img src={video.thumbnail} alt={video.title}
+      <img src={track.coverUrl || track.thumbnail} alt={track.title}
         style={{ width: 34, height: 34, objectFit: "cover", flexShrink: 0, opacity: 0.6 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#FFFFFF", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title}</div>
-        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{video.duration}</div>
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#FFFFFF", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.title}</div>
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{track.duration}</div>
       </div>
     </div>
   );
 }
 
-// ─── PlayingBars animation ────────────────────────────────────────────────────
+// ─── PlayingBars ──────────────────────────────────────────────────────────────
 function PlayingBars() {
   return (
     <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 16, width: 20 }}>
