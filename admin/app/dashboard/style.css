@@ -1,217 +1,507 @@
-/* app/dashboard/style.css */
 
-.dashboard-container {
-  min-height: 100vh;
-  background-color: var(--black);
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+/* ======================== SHELL ======================== */
+.dash-shell {
   display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'DM Sans', sans-serif;
 }
 
-.dashboard-main {
+.dash-main {
   flex: 1;
-  margin-left: 280px;
-  padding: 2rem 2.5rem;
+  margin-left: 260px;
+  padding: 2.6rem 3rem;
   max-width: 1400px;
-  width: 100%;
-  transition: margin-left 0.4s ease;
+  box-sizing: border-box;
 }
 
-/* Welcome */
-.welcome-section {
-  margin-bottom: 3rem;
+/* ======================== HEADER ======================== */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.8rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  animation: fadeUp 0.6s ease both;
 }
 
-.welcome-section h1 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 3.2rem;
-  color: white;
-  margin: 0;
-}
-
-.welcome-section p {
-  color: #aaa;
-  font-size: 1.1rem;
-  margin-top: 8px;
-}
-
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.stat-card {
-  background-color: var(--black-mid);
-  border: 1px solid rgba(212, 160, 23, 0.2);
-  border-radius: 24px;
-  padding: 2rem;
-  transition: all 0.4s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(212, 160, 23, 0.4);
-}
-
-.stat-card h3 {
-  color: #aaa;
-  font-size: 0.95rem;
-  margin-bottom: 0.8rem;
+.dash-eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #d4a017;
   font-weight: 500;
+  margin: 0 0 6px;
+  text-transform: uppercase;
 }
 
-.stat-number {
+.dash-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.9rem;
-  color: var(--gold);
-  margin: 0 0 0.5rem 0;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  color: white;
+  margin: 0 0 6px;
+  letter-spacing: 1px;
   line-height: 1;
 }
 
-.stat-change {
+.dash-title-gold {
+  background: linear-gradient(90deg, #c8900a, #f0c040, #d4a017);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200%;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0%   50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+.dash-subtitle {
+  color: #555;
   font-size: 0.9rem;
-}
-
-.positive { color: #22c55e; }
-
-/* Overview Grid */
-.overview-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.content-card {
-  background-color: var(--black-mid);
-  border: 1px solid rgba(212, 160, 23, 0.2);
-  border-radius: 24px;
-  padding: 2rem;
-}
-
-.content-card h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.1rem;
-  color: white;
-  margin-bottom: 1.5rem;
-}
-
-/* View All Link - Improved Design */
-.view-all-link {
-  color: var(--gold);
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.view-all-link:hover {
-  color: #f5d24a;
-  transform: translateX(6px);
-  text-decoration: underline;
-}
-
-/* Song List */
-.song-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.song-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(212, 160, 23, 0.1);
-}
-
-.song-item:last-child {
-  border-bottom: none;
-}
-
-.song-rank {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--gold);
-  width: 28px;
-}
-
-.song-info .song-title {
-  color: white;
-  font-weight: 600;
+  font-weight: 300;
+  font-style: italic;
   margin: 0;
 }
 
-.song-info .song-artist {
-  color: #888;
-  font-size: 0.9rem;
-  margin: 2px 0 0 0;
-}
-
-.upload-status {
-  margin-left: auto;
-  padding: 4px 12px;
+/* Live badge */
+.dash-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(212,160,23,0.08);
+  border: 1px solid rgba(212,160,23,0.2);
+  color: #d4a017;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 8px 14px;
   border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  margin-top: 6px;
 }
 
-.new {
-  background-color: #22c55e;
-  color: black;
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 1.8s ease-in-out infinite;
 }
 
-/* Bottom Grid */
-.bottom-grid {
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* ======================== STAT CARDS ======================== */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.4rem;
+  margin-bottom: 2.6rem;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 20px;
+  padding: 1.6rem 1.8rem 1.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.25s, box-shadow 0.3s;
+  animation: fadeUp 0.6s ease both;
+}
+
+/* Inset gold shine on top edge */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  width: 70%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.5), transparent);
+}
+
+.stat-card:hover {
+  border-color: rgba(212,160,23,0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,160,23,0.08);
+}
+
+.stat-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(212,160,23,0.1);
+  border: 1px solid rgba(212,160,23,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d4a017;
+  flex-shrink: 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem;
+  color: white;
+  line-height: 1;
+  letter-spacing: 1px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+/* Loading skeleton for number */
+.stat-skeleton {
+  display: block;
+  width: 80px;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Subtle bottom progress bar */
+.stat-card-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(212,160,23,0.06);
+  border-radius: 0 0 20px 20px;
+  overflow: hidden;
+}
+
+.stat-card-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #c8900a, #f0c040);
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ======================== OVERVIEW GRID ======================== */
+.overview-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 1.6rem;
 }
 
-/* ==================== RESPONSIVE ==================== */
+/* ======================== CONTENT CARD ======================== */
+.content-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(212,160,23,0.13);
+  border-radius: 20px;
+  padding: 1.8rem 2rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.6s 0.2s ease both;
+  transition: border-color 0.3s;
+}
+
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.35), transparent);
+}
+
+.content-card:hover {
+  border-color: rgba(212,160,23,0.28);
+}
+
+/* Card header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212,160,23,0.08);
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-header-icon {
+  color: #d4a017;
+}
+
+.card-header h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.35rem;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d4a017;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: gap 0.2s, color 0.2s;
+}
+
+.view-all-btn:hover {
+  color: #f0c040;
+  gap: 7px;
+}
+
+/* ======================== SONG LIST ======================== */
+.song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.song-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(212,160,23,0.06);
+  transition: background 0.2s;
+  border-radius: 8px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.song-row:last-child {
+  border-bottom: none;
+}
+
+.song-row:hover {
+  background: rgba(212,160,23,0.04);
+}
+
+/* Rank circle */
+.song-rank-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(212,160,23,0.1);
+  border: 1px solid rgba(212,160,23,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.song-rank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.95rem;
+  color: #d4a017;
+  line-height: 1;
+}
+
+/* Cover placeholder (recent uploads) */
+.song-cover-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(212,160,23,0.08);
+  border: 1px solid rgba(212,160,23,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  flex-shrink: 0;
+}
+
+/* Song info */
+.song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-title {
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-meta {
+  color: #555;
+  font-size: 0.78rem;
+  font-weight: 300;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Streams (right side of most-streamed) */
+.song-streams-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.song-streams {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  color: white;
+  line-height: 1;
+}
+
+.song-streams-label {
+  font-size: 10px;
+  color: #444;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Right col for recent uploads */
+.song-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.upload-time {
+  font-size: 11px;
+  color: #555;
+  font-weight: 300;
+}
+
+.badge-new {
+  display: inline-block;
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #22c55e;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+/* ======================== SKELETON ROWS ======================== */
+.song-skeleton {
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.06) 50%,
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+
+/* ======================== EMPTY STATE ======================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 3rem 2rem;
+  color: #333;
+  border: 1px dashed rgba(212,160,23,0.15);
+  border-radius: 12px;
+  margin-top: 6px;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+  color: #444;
+  margin: 0;
+}
+
+/* ======================== ANIMATION ======================== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ======================== RESPONSIVE ======================== */
+@media (max-width: 1200px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
 @media (max-width: 1024px) {
-  .dashboard-main {
+  .dash-main {
     margin-left: 0;
-    padding: 2rem 1.5rem;
+    padding: 5rem 1.6rem 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  }
-
-  .overview-grid,
-  .bottom-grid {
+  .overview-grid {
     grid-template-columns: 1fr;
-    gap: 1.2rem;
   }
 
-  .content-card {
-    padding: 1.6rem;
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .welcome-section h1 {
-    font-size: 2.3rem;
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
   }
 
-  .stat-number {
-    font-size: 2.5rem;
+  .stat-value {
+    font-size: 2.2rem;
   }
 
-  .dashboard-main {
-    padding: 1.2rem 1rem;
-  }
-
-  .view-all-link {
-    font-size: 0.9rem;
+  .dash-main {
+    padding: 5rem 1rem 2rem;
   }
 }
+

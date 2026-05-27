@@ -1,129 +1,238 @@
+
 "use client";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
-import RecentActivity from "../../components/Actions/RecentActivity";
-import QuickActions from "../../components/Actions/QuickActions";
+import { useState, useEffect } from "react";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  getCountFromServer,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Link from "next/link";
+import {
+  Users, Music, Play, Download,
+  TrendingUp, Clock, ChevronRight, BarChart2
+} from "lucide-react";
 import "./style.css";
 
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  streams: number;
+  downloads?: number;
+  createdAt?: any;
+}
+
 export default function Dashboard() {
+  const [totalArtists,   setTotalArtists]   = useState(0);
+  const [totalSongs,     setTotalSongs]     = useState(0);
+  const [totalStreams,   setTotalStreams]    = useState(0);
+  const [totalDownloads, setTotalDownloads] = useState(0);
+  const [mostStreamed,   setMostStreamed]   = useState<Song[]>([]);
+  const [recentUploads,  setRecentUploads]  = useState<Song[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [greeting,       setGreeting]       = useState("Good Day");
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    if (h < 12)      setGreeting("Good Morning");
+    else if (h < 18) setGreeting("Good Afternoon");
+    else             setGreeting("Good Evening");
+  }, []);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const artistsCount = await getCountFromServer(collection(db, "artists"));
+        setTotalArtists(artistsCount.data().count);
+
+        const songsSnapshot = await getDocs(collection(db, "songs"));
+        let songsCount = 0, streamsSum = 0, downloadsSum = 0;
+        songsSnapshot.forEach((doc) => {
+          const d = doc.data();
+          songsCount++;
+          streamsSum   += d.streams   || 0;
+          downloadsSum += d.downloads || 0;
+        });
+        setTotalSongs(songsCount);
+        setTotalStreams(streamsSum);
+        setTotalDownloads(downloadsSum);
+
+        const mostStreamedSnap = await getDocs(
+          query(collection(db, "songs"), orderBy("streams", "desc"), limit(5))
+        );
+        setMostStreamed(mostStreamedSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Song[]);
+
+        const recentSnap = await getDocs(
+          query(collection(db, "songs"), orderBy("createdAt", "desc"), limit(5))
+        );
+        setRecentUploads(recentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Song[]);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const fmt = (n: number) => {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+    if (n >= 1_000)     return (n / 1_000).toFixed(1) + "K";
+    return n.toLocaleString();
+  };
+
+  const timeAgo = (ts: any) => {
+    if (!ts) return "Unknown";
+    const date = ts.toDate ? ts.toDate() : new Date(ts);
+    const s = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (s < 60)    return "Just now";
+    if (s < 3600)  return Math.floor(s / 60)   + "m ago";
+    if (s < 86400) return Math.floor(s / 3600)  + "h ago";
+    return Math.floor(s / 86400) + "d ago";
+  };
+
+  const statCards = [
+    { label: "Total Artists",   value: totalArtists,   fmt: (v: number) => v.toLocaleString(), icon: <Users    size={20} />, accent: "#d4a017" },
+    { label: "Total Songs",     value: totalSongs,     fmt: (v: number) => v.toLocaleString(), icon: <Music    size={20} />, accent: "#d4a017" },
+    { label: "Total Streams",   value: totalStreams,   fmt,                                    icon: <Play     size={20} />, accent: "#d4a017" },
+    { label: "Total Downloads", value: totalDownloads, fmt,                                    icon: <Download size={20} />, accent: "#d4a017" },
+  ];
+
   return (
-    <div className="dashboard-container">
+    <div className="dash-shell">
       <Sidebar />
 
-      <div className="dashboard-main">
-        {/* Welcome Section */}
-        <div className="welcome-section">
+      <main className="dash-main">
+
+        {/* ── Header ── */}
+        <div className="dash-header">
           <div>
-            <h1>Good Evening, Admin</h1>
-            <p>Welcome back to your empire. Everything is running smoothly.</p>
+            <p className="dash-eyebrow">OVERVIEW</p>
+            <h1 className="dash-title">
+              {greeting}, <span className="dash-title-gold">Admin</span>
+            </h1>
+            <p className="dash-subtitle">Welcome back to your empire.</p>
+          </div>
+          <div className="dash-header-badge">
+            <BarChart2 size={16} />
+            <span>Live Data</span>
+            <span className="live-dot" />
           </div>
         </div>
 
-        {/* Main Stats Overview */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <h3>Total Users</h3>
-            <p className="stat-number">24,892</p>
-            <p className="stat-change positive">↑ 12.4% this month</p>
-          </div>
-
-          <div className="stat-card">
-            <h3>Total Artists</h3>
-            <p className="stat-number">184</p>
-            <p className="stat-change positive">↑ 8 this week</p>
-          </div>
-
-          <div className="stat-card">
-            <h3>Total Songs</h3>
-            <p className="stat-number">3,284</p>
-            <p className="stat-change positive">↑ 142 this month</p>
-          </div>
-
-          <div className="stat-card">
-            <h3>Total Downloads</h3>
-            <p className="stat-number">892.4K</p>
-            <p className="stat-change positive">↑ 18.7% this month</p>
-          </div>
-
-          <div className="stat-card">
-            <h3>Total Streams</h3>
-            <p className="stat-number">1.4M</p>
-            <p className="stat-change positive">↑ 23% this month</p>
-          </div>
-
-          <div className="stat-card">
-            <h3>Monthly Revenue</h3>
-            <p className="stat-number">$48.2K</p>
-            <p className="stat-change positive">↑ 15.3% this month</p>
-          </div>
+        {/* ── Stat Cards ── */}
+        <div className="stat-grid">
+          {statCards.map((card, i) => (
+            <div className="stat-card" key={card.label} style={{ animationDelay: `${i * 80}ms` }}>
+              <div className="stat-card-top">
+                <div className="stat-icon">{card.icon}</div>
+                <span className="stat-label">{card.label}</span>
+              </div>
+              <div className="stat-value">
+                {loading ? (
+                  <span className="stat-skeleton" />
+                ) : (
+                  card.fmt(card.value)
+                )}
+              </div>
+              <div className="stat-card-bar">
+                <div className="stat-card-bar-fill" style={{ width: loading ? "0%" : "100%" }} />
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Most Streamed Songs & Recent Uploads */}
+        {/* ── Two Column Grid ── */}
         <div className="overview-grid">
-          {/* Most Streamed Songs */}
+
+          {/* Most Streamed */}
           <div className="content-card">
             <div className="card-header">
-              <h2>Most Streamed Songs</h2>
-              <Link href="/music" className="view-all-link">View All →</Link>
+              <div className="card-header-left">
+                <TrendingUp size={16} className="card-header-icon" />
+                <h2>Most Streamed</h2>
+              </div>
+              <Link href="/music" className="view-all-btn">
+                View All <ChevronRight size={14} />
+              </Link>
             </div>
+
             <div className="song-list">
-              <div className="song-item">
-                <span className="song-rank">1</span>
-                <div className="song-info">
-                  <p className="song-title">Night in the Ghetto</p>
-                  <p className="song-artist">Lil Zulu • 2.3M streams</p>
+              {loading ? (
+                [1,2,3].map(i => <div key={i} className="song-skeleton" />)
+              ) : mostStreamed.length > 0 ? (
+                mostStreamed.map((song, idx) => (
+                  <div key={song.id} className="song-row">
+                    <div className="song-rank-wrap">
+                      <span className="song-rank">{idx + 1}</span>
+                    </div>
+                    <div className="song-info">
+                      <p className="song-title">{song.title}</p>
+                      <p className="song-meta">{song.artist}</p>
+                    </div>
+                    <div className="song-streams-wrap">
+                      <span className="song-streams">{fmt(song.streams)}</span>
+                      <span className="song-streams-label">streams</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <Music size={28} />
+                  <p>No songs yet</p>
                 </div>
-              </div>
-              <div className="song-item">
-                <span className="song-rank">2</span>
-                <div className="song-info">
-                  <p className="song-title">Street Prayer</p>
-                  <p className="song-artist">Mama Africa • 1.9M streams</p>
-                </div>
-              </div>
-              <div className="song-item">
-                <span className="song-rank">3</span>
-                <div className="song-info">
-                  <p className="song-title">Hustle Season</p>
-                  <p className="song-artist">Trap King • 1.6M streams</p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Recent Uploads */}
           <div className="content-card">
             <div className="card-header">
-              <h2>Recent Uploads</h2>
-              <Link href="/music" className="view-all-link">View All →</Link>
+              <div className="card-header-left">
+                <Clock size={16} className="card-header-icon" />
+                <h2>Recent Uploads</h2>
+              </div>
+              <Link href="/music" className="view-all-btn">
+                View All <ChevronRight size={14} />
+              </Link>
             </div>
+
             <div className="song-list">
-              <div className="song-item">
-                <div className="song-info">
-                  <p className="song-title">New Flame</p>
-                  <p className="song-artist">FireBoy • 2 hours ago</p>
+              {loading ? (
+                [1,2,3].map(i => <div key={i} className="song-skeleton" />)
+              ) : recentUploads.length > 0 ? (
+                recentUploads.map((song) => (
+                  <div key={song.id} className="song-row">
+                    <div className="song-cover-placeholder">
+                      <Music size={14} />
+                    </div>
+                    <div className="song-info">
+                      <p className="song-title">{song.title}</p>
+                      <p className="song-meta">{song.artist}</p>
+                    </div>
+                    <div className="song-right-col">
+                      <span className="upload-time">{timeAgo(song.createdAt)}</span>
+                      <span className="badge-new">New</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <Music size={28} />
+                  <p>No recent uploads</p>
                 </div>
-                <span className="upload-status new">New</span>
-              </div>
-              <div className="song-item">
-                <div className="song-info">
-                  <p className="song-title">Ghetto Love</p>
-                  <p className="song-artist">Queen V • Yesterday</p>
-                </div>
-              </div>
-              <div className="song-item">
-                <div className="song-info">
-                  <p className="song-title">Road to Success</p>
-                  <p className="song-artist">Young Lion • 3 days ago</p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
-        </div>
 
-        
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

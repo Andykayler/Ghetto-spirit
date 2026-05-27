@@ -4,9 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { 
-  Menu, X, Home, Users, Music, UserPlus, BarChart3, 
-  DollarSign, Settings, LogOut, User 
+import {
+  Menu,
+  X,
+  Home,
+  Users,
+  Music,
+  UserPlus,
+  BarChart3,
+  DollarSign,
+  Settings,
+  LogOut,
+  User,
 } from "lucide-react";
 import "./style.css";
 
@@ -14,13 +23,24 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-  const closeSidebar = () => setIsOpen(false);
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
 
-  const isActive = (href: string) => pathname === href;
+  const closeSidebar = () => {
+    setIsOpen(false);
+  };
+
+  const isActive = (href: string) => {
+    return pathname === href;
+  };
 
   const handleLogout = () => {
-    if (confirm("Are you sure you want to logout?")) {
+    const confirmLogout = window.confirm(
+      "Are you sure you want to logout?"
+    );
+
+    if (confirmLogout) {
       alert("Logged out successfully! (Demo)");
       window.location.href = "/login";
     }
@@ -28,17 +48,18 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
+      {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
         className="mobile-menu-button"
-        aria-label="Toggle menu"
+        aria-label="Toggle Sidebar"
       >
         {isOpen ? <X size={28} /> : <Menu size={28} />}
       </button>
 
       {/* Sidebar */}
-      <div className={`sidebar ${isOpen ? "open" : ""}`}>
+      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        {/* Logo */}
         <div className="sidebar-logo">
           <Image
             src="/images/logo.png"
@@ -48,105 +69,145 @@ export default function Sidebar() {
             priority
             className="sidebar-logo-image"
           />
-          <span>ADMIN PORTAL</span>
+
+          <span className="portal-label">ADMIN PORTAL</span>
         </div>
 
-        <div className="sidebar-nav">
-          <Link 
-            href="/dashboard" 
-            className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`}
+        {/* Navigation */}
+        <nav className="sidebar-nav">
+
+          {/* Dashboard */}
+          <Link
+            href="/dashboard"
+            className={`sidebar-link ${
+              isActive("/dashboard") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <Home size={20} />
-            Dashboard
+            <span>Dashboard</span>
           </Link>
 
-          <Link 
-            href="/artists" 
-            className={`sidebar-link ${isActive('/artists') ? 'active' : ''}`}
+          {/* Artists */}
+          <Link
+            href="/artists"
+            className={`sidebar-link ${
+              isActive("/artists") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <UserPlus size={20} />
-            Artists
+            <span>Artists</span>
           </Link>
 
-          <Link 
-            href="/music" 
-            className={`sidebar-link ${isActive('/music') ? 'active' : ''}`}
+          {/* Music */}
+          <Link
+            href="/music"
+            className={`sidebar-link ${
+              isActive("/music") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <Music size={20} />
-            Music Library
+            <span>Music Library</span>
           </Link>
 
-          <Link 
-            href="/users" 
-            className={`sidebar-link ${isActive('/users') ? 'active' : ''}`}
+          {/* Users */}
+          <Link
+            href="/users"
+            className={`sidebar-link ${
+              isActive("/users") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <Users size={20} />
-            Users
+            <span>Users</span>
           </Link>
 
-          <Link 
-            href="/analytics" 
-            className={`sidebar-link ${isActive('/analytics') ? 'active' : ''}`}
+          {/* Analytics */}
+          <Link
+            href="/analytics"
+            className={`sidebar-link ${
+              isActive("/analytics") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <BarChart3 size={20} />
-            Analytics
+            <span>Analytics</span>
           </Link>
 
-          <Link 
-            href="/revenue" 
-            className={`sidebar-link ${isActive('/revenue') ? 'active' : ''}`}
+          {/* Revenue */}
+          <Link
+            href="/revenue"
+            className={`sidebar-link ${
+              isActive("/revenue") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <DollarSign size={20} />
-            Revenue
+            <span>Revenue</span>
           </Link>
 
-          {/* Profile Link Added */}
-          <Link 
-            href="/profile" 
-            className={`sidebar-link ${isActive('/profile') ? 'active' : ''}`}
+          {/* Profile */}
+          <Link
+            href="/profile"
+            className={`sidebar-link ${
+              isActive("/profile") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <User size={20} />
-            Profile
+            <span>Profile</span>
           </Link>
 
-          <Link 
-            href="/settings" 
-            className={`sidebar-link ${isActive('/settings') ? 'active' : ''}`}
+          {/* Settings */}
+          <Link
+            href="/settings"
+            className={`sidebar-link ${
+              isActive("/settings") ? "active" : ""
+            }`}
             onClick={closeSidebar}
           >
             <Settings size={20} />
-            Settings
+            <span>Settings</span>
           </Link>
-        </div>
+        </nav>
 
-        {/* Footer with Logout */}
+        {/* Footer */}
         <div className="sidebar-footer">
+
+          {/* Admin Info */}
           <div className="admin-info">
             <div className="admin-avatar">
               A
             </div>
-            <div>
+
+            <div className="admin-details">
               <p className="admin-name">Admin</p>
-              <p className="admin-email">admin@ghettospirit.com</p>
+              <p className="admin-email">
+                admin@ghettospirit.com
+              </p>
             </div>
           </div>
 
-          <button className="logout-btn" onClick={handleLogout}>
+          {/* Logout */}
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+          >
             <LogOut size={18} />
-            Logout
+            <span>Logout</span>
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Mobile Overlay */}
-      {isOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={closeSidebar}
+        />
+      )}
     </>
   );
 }

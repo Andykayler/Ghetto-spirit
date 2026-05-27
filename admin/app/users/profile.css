@@ -1,0 +1,488 @@
+/* app/profile/profile.css */
+
+/* ==================== SHELL ==================== */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #0d0d0d;
+}
+
+.profile-main {
+  flex: 1;
+  margin-left: 260px; /* match sidebar width */
+  padding: 2.4rem 2.8rem;
+  max-width: 1100px;
+}
+
+@media (max-width: 768px) {
+  .profile-main {
+    margin-left: 0;
+    padding: 5rem 1.2rem 2rem;
+  }
+}
+
+/* ==================== PAGE HEADER ==================== */
+.profile-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.profile-page-label {
+  color: var(--gold, #d4a017);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  margin: 0 0 0.25rem;
+}
+
+.profile-page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  color: white;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+
+/* ==================== SAVE BUTTON ==================== */
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gold, #d4a017);
+  color: #0d0d0d;
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1.6rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, background 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.save-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-btn.saved {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #0d0d0d;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== SAVE BANNER ==================== */
+.save-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  border-radius: 10px;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== GRID ==================== */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.8rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== CARDS ==================== */
+.profile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 160, 23, 0.14);
+  border-radius: 20px;
+  padding: 2rem 1.8rem;
+  backdrop-filter: blur(8px);
+}
+
+/* ==================== AVATAR CARD ==================== */
+.avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+}
+
+.avatar-glow-wrap {
+  position: relative;
+  margin-bottom: 0.6rem;
+}
+
+.avatar-ring {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212,160,23,0.25), rgba(212,160,23,0.05));
+  border: 3px solid var(--gold, #d4a017);
+  box-shadow: 0 0 0 6px rgba(212, 160, 23, 0.1), 0 12px 36px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar-initials {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem;
+  color: var(--gold, #d4a017);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.avatar-change-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--gold, #d4a017);
+  color: #0d0d0d;
+  border: 2px solid #0d0d0d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.avatar-change-btn:hover {
+  opacity: 0.85;
+  transform: scale(1.1);
+}
+
+.avatar-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.7rem;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.avatar-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(212, 160, 23, 0.15);
+  border: 1px solid rgba(212, 160, 23, 0.3);
+  color: var(--gold, #d4a017);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+.avatar-email {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Avatar stats strip */
+.avatar-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(212, 160, 23, 0.1);
+  width: 100%;
+}
+
+.av-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.av-stat span {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: white;
+  line-height: 1;
+}
+
+.av-stat label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.av-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(212, 160, 23, 0.15);
+}
+
+/* ==================== RIGHT COLUMN ==================== */
+.profile-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* ==================== CARD HEADER ==================== */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.6rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212, 160, 23, 0.12);
+}
+
+.card-header h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.card-header-icon {
+  color: var(--gold, #d4a017);
+  flex-shrink: 0;
+}
+
+/* ==================== FORM ==================== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Input wrapper with icon */
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #555;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.input-wrap input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 160, 23, 0.18);
+  border-radius: 10px;
+  padding: 0.7rem 1rem 0.7rem 2.5rem;
+  color: white;
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+
+.input-wrap input::placeholder {
+  color: #444;
+}
+
+.input-wrap input:focus {
+  border-color: var(--gold, #d4a017);
+  background: rgba(212, 160, 23, 0.05);
+}
+
+/* Textarea */
+.form-group textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 160, 23, 0.18);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 0.92rem;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group textarea::placeholder {
+  color: #444;
+}
+
+.form-group textarea:focus {
+  border-color: var(--gold, #d4a017);
+  background: rgba(212, 160, 23, 0.05);
+}
+
+/* ==================== PASSWORD ==================== */
+.pw-toggle {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.pw-toggle:hover {
+  color: var(--gold, #d4a017);
+}
+
+.pw-mismatch {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f87171;
+  font-size: 0.82rem;
+}
+
+/* Strength bar */
+.pw-strength-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pw-strength-bar {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+}
+
+.pw-bar-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.3s;
+}
+
+.pw-bar-seg.active {
+  background: var(--gold, #d4a017);
+}
+
+.pw-strength-label {
+  font-size: 0.78rem;
+  color: #888;
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Update password button */
+.update-pw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1.4rem;
+  background: transparent;
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  color: var(--gold, #d4a017);
+  border-radius: 10px;
+  padding: 0.65rem 1.4rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.update-pw-btn:hover {
+  background: rgba(212, 160, 23, 0.1);
+  border-color: var(--gold, #d4a017);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .profile-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

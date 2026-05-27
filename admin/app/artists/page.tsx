@@ -3,10 +3,10 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 import "./artists.css";
 
 import AddArtistModal from "./addartist";
-import ViewArtistModal from "./view-artist";
 import EditArtistModal from "./edit-artist";
 import DeleteConfirmModal from "./delete-confirm";
 
@@ -18,51 +18,41 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
+import { toast } from "react-hot-toast";
 
 export default function ArtistsPage() {
+  const router = useRouter();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
-
-  // REAL FIREBASE DATA
   const [artists, setArtists] = useState<any[]>([]);
 
-  // 🔥 REAL-TIME FETCH FROM FIRESTORE
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "artists"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const data = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
       }));
-
       setArtists(data);
     });
-
     return () => unsub();
   }, []);
 
-  // FILTERING
   const filteredArtists = artists.filter((artist) => {
-    const matchesSearch = artist.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-
-    const matchesFilter =
-      filter === "all" || artist.status === filter;
-
+    const matchesSearch =
+      artist.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+    const matchesFilter = filter === "all" || artist.status === filter;
     return matchesSearch && matchesFilter;
   });
 
-  // ACTIONS
   const handleView = (artist: any) => {
-    setSelectedArtist(artist);
-    setShowViewModal(true);
+    router.push(`/artists/${artist.id}`);
   };
 
   const handleEdit = (artist: any) => {
@@ -75,12 +65,15 @@ export default function ArtistsPage() {
     setShowDeleteModal(true);
   };
 
-  // DELETE FROM FIRESTORE
   const confirmDelete = async () => {
     if (selectedArtist?.id) {
-      await deleteDoc(doc(db, "artists", selectedArtist.id));
+      try {
+        await deleteDoc(doc(db, "artists", selectedArtist.id));
+        toast.success(`${selectedArtist.name} has been deleted successfully`);
+      } catch (err) {
+        toast.error("Failed to delete artist");
+      }
     }
-
     setShowDeleteModal(false);
     setSelectedArtist(null);
   };
@@ -92,17 +85,12 @@ export default function ArtistsPage() {
       <div className="dashboard-main">
         <div className="page-header">
           <h1>Artist Management</h1>
-
-          <button
-            className="add-btn"
-            onClick={() => setShowAddModal(true)}
-          >
+          <button className="add-btn" onClick={() => setShowAddModal(true)}>
             <Plus size={20} />
             Add New Artist
           </button>
         </div>
 
-        {/* SEARCH + FILTER */}
         <div className="controls">
           <div className="search-box">
             <Search size={20} />
@@ -121,20 +109,14 @@ export default function ArtistsPage() {
             >
               All
             </button>
-
             <button
-              className={`filter-btn ${
-                filter === "verified" ? "active" : ""
-              }`}
+              className={`filter-btn ${filter === "verified" ? "active" : ""}`}
               onClick={() => setFilter("verified")}
             >
               Verified
             </button>
-
             <button
-              className={`filter-btn ${
-                filter === "pending" ? "active" : ""
-              }`}
+              className={`filter-btn ${filter === "pending" ? "active" : ""}`}
               onClick={() => setFilter("pending")}
             >
               Pending
@@ -142,7 +124,6 @@ export default function ArtistsPage() {
           </div>
         </div>
 
-        {/* TABLE */}
         <div className="content-card table-card">
           <table className="artists-table">
             <thead>
@@ -155,86 +136,85 @@ export default function ArtistsPage() {
                 <th>Actions</th>
               </tr>
             </thead>
-
             <tbody>
-              {filteredArtists.map((artist) => (
-                <tr key={artist.id}>
-                  <td>
-                    <div className="artist-info">
-                      <img
-                        src={artist.image || "/images/default.jpg"}
-                        alt={artist.name}
-                        className="artist-avatar"
-                      />
-                      <span>{artist.name}</span>
-                    </div>
-                  </td>
-
-                  <td>{artist.streams || "0"}</td>
-                  <td>{artist.songs || 0}</td>
-                  <td>{artist.joined || "N/A"}</td>
-
-                  <td>
-                    <span
-                      className={`status-badge ${artist.status}`}
-                    >
-                      {artist.status === "verified"
-                        ? "Verified"
-                        : "Pending"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="action-btn view"
-                        onClick={() => handleView(artist)}
-                      >
-                        <Eye size={18} />
-                      </button>
-
-                      <button
-                        className="action-btn edit"
-                        onClick={() => handleEdit(artist)}
-                      >
-                        <Edit size={18} />
-                      </button>
-
-                      <button
-                        className="action-btn delete"
-                        onClick={() =>
-                          handleDeleteClick(artist)
-                        }
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+              {filteredArtists.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+                    No artists found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredArtists.map((artist) => (
+                  <tr key={artist.id}>
+                    <td>
+                      <div className="artist-info">
+                        <img
+                          src={artist.image || "/images/default.jpg"}
+                          alt={artist.name}
+                          className="artist-avatar"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "/images/default.jpg";
+                          }}
+                        />
+                        <span>{artist.name}</span>
+                      </div>
+                    </td>
+                    <td>{artist.streams || "0"}</td>
+                    <td>{artist.songs || 0}</td>
+                    <td>{artist.joined || "N/A"}</td>
+                    <td>
+                      <span
+                        className={`status-badge ${
+                          artist.status || "pending"
+                        }`}
+                      >
+                        {artist.status === "verified" ? "Verified" : "Pending"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="action-btn view"
+                          title="View Profile"
+                          onClick={() => handleView(artist)}
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          className="action-btn edit"
+                          title="Edit"
+                          onClick={() => handleEdit(artist)}
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          className="action-btn delete"
+                          title="Delete"
+                          onClick={() => handleDeleteClick(artist)}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* MODALS */}
+      {/* Modals */}
       <AddArtistModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
       />
-
-      <ViewArtistModal
-        isOpen={showViewModal}
-        onClose={() => setShowViewModal(false)}
-        artist={selectedArtist}
-      />
-
       <EditArtistModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         artist={selectedArtist}
       />
-
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
