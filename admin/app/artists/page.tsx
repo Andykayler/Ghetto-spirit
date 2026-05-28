@@ -1,5 +1,4 @@
 "use client";
-
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
@@ -8,15 +7,10 @@ import "./artists.css";
 
 import AddArtistModal from "./addartist";
 import EditArtistModal from "./edit-artist";
-import DeleteConfirmModal from "./delete-confirm";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal";
+import { archiveArtist } from "../../lib/archiveHelpers";
 
-import {
-  collection,
-  onSnapshot,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
 
@@ -66,16 +60,16 @@ export default function ArtistsPage() {
   };
 
   const confirmDelete = async () => {
-    if (selectedArtist?.id) {
-      try {
-        await deleteDoc(doc(db, "artists", selectedArtist.id));
-        toast.success(`${selectedArtist.name} has been deleted successfully`);
-      } catch (err) {
-        toast.error("Failed to delete artist");
-      }
+    if (!selectedArtist) return;
+    try {
+      await archiveArtist(selectedArtist.id);
+      toast.success(`"${selectedArtist.name}" archived`);
+    } catch {
+      toast.error("Failed to archive artist");
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedArtist(null);
     }
-    setShowDeleteModal(false);
-    setSelectedArtist(null);
   };
 
   return (
@@ -139,7 +133,10 @@ export default function ArtistsPage() {
             <tbody>
               {filteredArtists.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+                  <td
+                    colSpan={6}
+                    style={{ textAlign: "center", padding: "3rem", color: "#666" }}
+                  >
                     No artists found.
                   </td>
                 </tr>
@@ -165,9 +162,7 @@ export default function ArtistsPage() {
                     <td>{artist.joined || "N/A"}</td>
                     <td>
                       <span
-                        className={`status-badge ${
-                          artist.status || "pending"
-                        }`}
+                        className={`status-badge ${artist.status || "pending"}`}
                       >
                         {artist.status === "verified" ? "Verified" : "Pending"}
                       </span>
@@ -205,7 +200,6 @@ export default function ArtistsPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <AddArtistModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

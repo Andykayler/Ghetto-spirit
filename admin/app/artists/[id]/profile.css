@@ -1,5 +1,20 @@
 /* app/artists/[id]/profile.css */
 
+:root {
+  --gold: #d4a017;
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.profile-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem 2.5rem;
+  min-height: 100vh;
+  width: calc(100% - 280px);
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
 /* ==================== BACK BUTTON ==================== */
 .back-btn {
   display: inline-flex;
@@ -55,6 +70,8 @@
   min-height: 380px;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-avatar-wrap {
@@ -85,6 +102,7 @@
 
 .hero-info {
   flex: 1;
+  min-width: 0;
 }
 
 .hero-label {
@@ -97,11 +115,12 @@
 
 .hero-name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
   color: white;
   margin: 0 0 0.5rem;
   line-height: 1;
   letter-spacing: 1px;
+  word-break: break-word;
 }
 
 .hero-meta {
@@ -171,9 +190,34 @@
   text-transform: uppercase;
 }
 
+/* ==================== ADD BUTTON ==================== */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d4a017, #f0c040);
+  color: #0a0a0a;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 160, 23, 0.35);
+}
+
 /* ==================== SONGS SECTION ==================== */
 .songs-section {
   margin-bottom: 3rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .songs-header {
@@ -181,6 +225,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.4rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .songs-header h2 {
@@ -221,10 +267,42 @@
   color: #666;
 }
 
+/* ==================== CONTENT CARD ==================== */
+.content-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(212,160,23,0.13);
+  border-radius: 20px;
+  padding: 1.8rem 2rem;
+  position: relative;
+  transition: border-color 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.content-card:hover {
+  border-color: rgba(212,160,23,0.28);
+}
+
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.35), transparent);
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
 /* ==================== MUSIC TABLE ==================== */
 .music-table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .music-table th {
@@ -237,6 +315,7 @@
   border-bottom: 1px solid rgba(212, 160, 23, 0.2);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .music-table td {
@@ -292,6 +371,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
 .song-cover-wrap {
@@ -336,43 +416,143 @@
 .song-title {
   font-weight: 500;
   color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .song-genre {
   color: #888;
   font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid rgba(212,160,23,0.25);
+  color: #aaa;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.action-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.action-btn.delete:hover {
+  color: #ef4444;
+  border-color: #ef4444;
 }
 
 /* ==================== RESPONSIVE ==================== */
+
+/* Sidebar collapses — main takes full width */
+@media (max-width: 1024px) {
+  .profile-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 5rem 1.8rem 2rem;
+  }
+
+  .artist-hero {
+    min-height: 300px;
+    padding: 2.5rem 2rem 2rem;
+  }
+}
+
+/* Tablet / large mobile */
 @media (max-width: 768px) {
+  .profile-main {
+    padding: 4.5rem 1.2rem 2rem;
+  }
+
   .artist-hero {
     flex-direction: column;
     align-items: flex-start;
     padding: 2rem 1.5rem;
     min-height: unset;
     gap: 1.4rem;
+    border-radius: 16px;
   }
 
   .hero-name {
-    font-size: 3rem;
+    font-size: clamp(2rem, 8vw, 3.5rem);
   }
 
-  .music-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-avatar {
-    width: 90px;
-    height: 90px;
+  .hero-stats {
+    gap: 1.4rem;
   }
 
   .songs-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .content-card {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .profile-main {
+    padding: 4rem 1rem 2rem;
+  }
+
+  .hero-avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  .hero-status-dot {
+    width: 14px;
+    height: 14px;
+    bottom: 4px;
+    right: 4px;
+  }
+
+  .hero-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+  }
+
+  .hero-bio {
+    font-size: 0.88rem;
+  }
+
+  .hero-stat span {
+    font-size: 1.3rem;
+  }
+
+  .songs-empty {
+    padding: 3rem 1rem;
+  }
+
+  .music-table th,
+  .music-table td {
+    padding: 0.85rem 0.8rem;
   }
 }

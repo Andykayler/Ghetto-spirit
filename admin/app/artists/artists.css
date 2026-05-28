@@ -9,12 +9,65 @@
   color: white;
 }
 
-.dash-main {
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+}
+
+.dashboard-main {
   flex: 1;
   margin-left: 260px;
   padding: 2.6rem 3rem;
-  max-width: 1400px;
+  width: calc(100% - 260px);
+  max-width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ======================== PAGE HEADER ======================== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.8rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+}
+
+.page-header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+/* ======================== ADD BUTTON ======================== */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d4a017, #f0c040);
+  color: #0a0a0a;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 160, 23, 0.35);
 }
 
 /* ======================== HEADER ======================== */
@@ -132,6 +185,8 @@
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-box {
@@ -142,8 +197,10 @@
   border-radius: 12px;
   padding: 12px 16px;
   width: 340px;
+  max-width: 100%;
   color: #ccc;
   transition: all 0.3s;
+  box-sizing: border-box;
 }
 
 .search-box:hover {
@@ -163,6 +220,7 @@
 .filters {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -174,6 +232,7 @@
   cursor: pointer;
   transition: all 0.3s;
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .filter-btn:hover {
@@ -194,9 +253,10 @@
   border-radius: 20px;
   padding: 1.8rem 2rem;
   position: relative;
-  overflow: hidden;
   animation: fadeUp 0.6s 0.1s ease both;
   transition: border-color 0.3s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .content-card:hover {
@@ -211,6 +271,10 @@
   width: 80%;
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(212,160,23,0.35), transparent);
+}
+
+.table-card {
+  overflow-x: auto;
 }
 
 .card-header {
@@ -238,7 +302,9 @@
 /* ======================== TABLE ======================== */
 .artists-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .artists-table th {
@@ -250,6 +316,7 @@
   letter-spacing: 0.6px;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(212,160,23,0.15);
+  white-space: nowrap;
 }
 
 .artists-table td {
@@ -257,6 +324,14 @@
   border-bottom: 1px solid rgba(212,160,23,0.08);
   color: white;
   vertical-align: middle;
+}
+
+.artists-table tr:last-child td {
+  border-bottom: none;
+}
+
+.artists-table tr:hover td {
+  background: rgba(212,160,23,0.04);
 }
 
 /* Artist Info */
@@ -282,6 +357,7 @@
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.4px;
+  white-space: nowrap;
 }
 
 .status-badge.verified {
@@ -300,6 +376,7 @@
 .action-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .action-btn {
@@ -315,6 +392,7 @@
   justify-content: center;
   width: 38px;
   height: 38px;
+  flex-shrink: 0;
 }
 
 .action-btn:hover {
@@ -348,9 +426,10 @@
 
 /* ======================== RESPONSIVE ======================== */
 @media (max-width: 1024px) {
-  .dash-main {
+  .dashboard-main {
     margin-left: 0;
     padding: 5rem 1.8rem 2rem;
+    width: 100%;
   }
 }
 
@@ -368,10 +447,14 @@
     width: 100%;
   }
 
-  .artists-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -380,11 +463,15 @@
     grid-template-columns: 1fr;
   }
 
-  .dash-main {
+  .dashboard-main {
     padding: 5rem 1rem 2rem;
   }
 
   .dash-title {
     font-size: 2.6rem;
+  }
+
+  .content-card {
+    padding: 1.2rem 1rem;
   }
 }

@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   User,
+  Archive,
 } from "lucide-react";
 import "./style.css";
 
@@ -121,14 +122,14 @@ export default function Sidebar() {
             <span>Analytics</span>
           </Link>
 
-          {/* Revenue */}
+         {/* Archive */}
           <Link
-            href="/revenue"
-            className={`sidebar-link ${isActive("/revenue") ? "active" : ""}`}
+            href="/archive"
+            className={`sidebar-link ${isActive("/archive") ? "active" : ""}`}
             onClick={closeSidebar}
           >
-            <DollarSign size={20} />
-            <span>Revenue</span>
+            <Archive size={20} />
+            <span>Archive</span>
           </Link>
 
           {/* Profile */}

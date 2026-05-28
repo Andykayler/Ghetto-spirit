@@ -1,23 +1,21 @@
 "use client";
-
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState, useEffect } from "react";
 import { Plus, Search, Play, Edit, Trash2, Download } from "lucide-react";
 import MusicPlayerBar from "../../components/MusicPlayerBar";
 import UploadModal from "./upload";
 import EditModal from "./edit";
-import DeleteConfirmModal from "./delete-confirm";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal";
 import "./music.css";
 
 import {
   collection,
   onSnapshot,
-  deleteDoc,
-  doc,
   query,
   orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { archiveSong } from "../../lib/archiveHelpers";
 import { toast } from "react-hot-toast";
 
 interface Song {
@@ -64,9 +62,10 @@ export default function MusicLibrary() {
     return () => unsub();
   }, []);
 
-  const filteredSongs = songs.filter((song) =>
-    song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSongs = songs.filter(
+    (song) =>
+      song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      song.artist.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handlePlay = (song: Song) => setCurrentlyPlaying(song);
@@ -84,12 +83,12 @@ export default function MusicLibrary() {
   const confirmDelete = async () => {
     if (!selectedSong) return;
     try {
-      await deleteDoc(doc(db, "songs", selectedSong.id));
-      toast.success(`"${selectedSong.title}" deleted`);
+      await archiveSong(selectedSong.id);
+      toast.success(`"${selectedSong.title}" moved to archive`);
       if (currentlyPlaying?.id === selectedSong.id) setCurrentlyPlaying(null);
     } catch (err) {
-      toast.error("Failed to delete song");
       console.error(err);
+      toast.error("Failed to archive song");
     } finally {
       setShowDeleteModal(false);
       setSelectedSong(null);
@@ -158,13 +157,9 @@ export default function MusicLibrary() {
 
         <div className="content-card table-card">
           {loading ? (
-            <p style={{ padding: "2rem", color: "var(--muted)" }}>
-              Loading songs...
-            </p>
+            <p style={{ padding: "2rem", color: "#666" }}>Loading songs...</p>
           ) : filteredSongs.length === 0 ? (
-            <p style={{ padding: "2rem", color: "var(--muted)" }}>
-              No songs found.
-            </p>
+            <p style={{ padding: "2rem", color: "#666" }}>No songs found.</p>
           ) : (
             <table className="music-table">
               <thead>
@@ -195,13 +190,15 @@ export default function MusicLibrary() {
                             }}
                           />
                         ) : (
-                          <div style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 4,
-                            background: "linear-gradient(135deg, #d4a017, #8b0000)",
-                            flexShrink: 0,
-                          }} />
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 4,
+                              background: "linear-gradient(135deg, #d4a017, #8b0000)",
+                              flexShrink: 0,
+                            }}
+                          />
                         )}
                         <span>{song.title}</span>
                       </div>
@@ -237,7 +234,7 @@ export default function MusicLibrary() {
                         <button
                           className="action-btn delete"
                           onClick={() => handleDeleteClick(song)}
-                          title="Delete"
+                          title="Archive"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -271,7 +268,8 @@ export default function MusicLibrary() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
-        songTitle={selectedSong?.title}
+        name={selectedSong?.title}
+        type="song"
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -14,25 +14,16 @@ export default function LogoutPage() {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-
-    // Simulate API call / auth cleanup
     await new Promise((resolve) => setTimeout(resolve, 1200));
-
     try {
       localStorage.clear();
       sessionStorage.clear();
-
       setLoggedOut(true);
-
-      toast.success("You have been logged out successfully", {
-        icon: "👋",
-      });
-
-      // Redirect to login after showing success
+      toast.success("You have been logged out successfully", { icon: "👋" });
       setTimeout(() => {
         router.push("/login");
       }, 1800);
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong");
       setIsLoggingOut(false);
     }
@@ -43,8 +34,8 @@ export default function LogoutPage() {
       <div className="logout-card">
         {!loggedOut ? (
           <>
-            <div className="logout-icon">
-              <LogOut size={48} />
+            <div className="logout-icon-wrap">
+              <LogOut size={40} />
             </div>
 
             <h1>Logout</h1>
@@ -53,7 +44,7 @@ export default function LogoutPage() {
             </p>
 
             <div className="logout-actions">
-              <Link href="/profile" className="cancel-btn">
+              <Link href="/dashboard" className="cancel-logout-btn">
                 <ArrowLeft size={18} />
                 Cancel
               </Link>
@@ -79,9 +70,12 @@ export default function LogoutPage() {
           </>
         ) : (
           <div className="success-state">
-            <CheckCircle size={64} className="success-icon" />
-            <h2>You’ve been logged out</h2>
+            <CheckCircle size={72} className="success-icon" />
+            <h2>You've been logged out</h2>
             <p>Redirecting to login page...</p>
+            <div className="success-dots">
+              <span /><span /><span />
+            </div>
           </div>
         )}
       </div>

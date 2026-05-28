@@ -1,85 +1,151 @@
 /* app/users/users.css */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+:root {
+  --gold: #d4a017;
+}
+
+/* ======================== MAIN WRAPPER ======================== */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+}
 
 .dashboard-main {
   flex: 1;
   margin-left: 280px;
-  padding: 2rem 1.8rem;        /* Further reduced side padding */
-  max-width: 1400px;
-  width: 100%;
-  transition: margin-left 0.4s ease;
+  padding: 2.6rem 3rem;
+  width: calc(100% - 280px);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
+/* ======================== PAGE HEADER ======================== */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.6rem;
+  margin-bottom: 2.8rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
 }
 
 .page-header h1 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.8rem;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
   color: white;
   margin: 0;
+  letter-spacing: 1px;
+  line-height: 1;
 }
 
-/* Add User Button */
+/* ======================== ADD BUTTON ======================== */
 .add-user-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--gold);
-  color: black;
+  background: linear-gradient(135deg, #d4a017, #f0c040);
+  color: #0a0a0a;
   border: none;
-  padding: 11px 18px;
+  padding: 12px 22px;
   border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
-  font-size: 0.98rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
 .add-user-btn:hover {
-  background: #f0c040;
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 160, 23, 0.35);
 }
 
-/* Controls */
+/* ======================== CONTROLS ======================== */
 .controls {
-  margin-bottom: 1.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  background: var(--black-mid);
+  background: rgba(255,255,255,0.03);
   border: 1px solid rgba(212, 160, 23, 0.2);
   border-radius: 12px;
-  padding: 10px 14px;
-  width: 320px;
+  padding: 12px 16px;
+  width: 340px;
+  max-width: 100%;
   color: #ccc;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.search-box:hover {
+  border-color: rgba(212, 160, 23, 0.4);
 }
 
 .search-box input {
   background: transparent;
   border: none;
   outline: none;
-  margin-left: 10px;
+  margin-left: 12px;
   color: white;
   width: 100%;
+  font-size: 0.95rem;
+  font-family: 'DM Sans', sans-serif;
 }
 
-/* ==================== TABLE ==================== */
+.search-box input::placeholder {
+  color: #555;
+}
+
+/* ======================== CONTENT CARD ======================== */
+.content-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(212,160,23,0.13);
+  border-radius: 20px;
+  padding: 1.8rem 2rem;
+  position: relative;
+  transition: border-color 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.content-card:hover {
+  border-color: rgba(212,160,23,0.28);
+}
+
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.35), transparent);
+}
+
 .table-card {
   padding: 0;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(212, 160, 23, 0.15);
+  overflow-x: auto;
 }
 
+/* ======================== TABLE ======================== */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -87,68 +153,127 @@
 
 .users-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
-  table-layout: fixed;           /* Important for better control */
-  min-width: 820px;              /* Reduced significantly */
+  table-layout: auto;
 }
 
 .users-table th {
   text-align: left;
-  padding: 0.85rem 0.9rem;       /* Much tighter padding */
-  color: #aaa;
+  padding: 1.1rem 1.6rem;
+  color: #888;
   font-weight: 500;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(212, 160, 23, 0.2);
-  font-size: 0.95rem;
+  font-size: 0.83rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(212,160,23,0.15);
+  background: rgba(0,0,0,0.3);
+  white-space: nowrap;
 }
 
 .users-table td {
-  padding: 0.85rem 0.9rem;
-  border-bottom: 1px solid rgba(212, 160, 23, 0.1);
+  padding: 1.35rem 1.6rem;
+  border-bottom: 1px solid rgba(212,160,23,0.08);
   color: white;
-  font-size: 0.96rem;
+  vertical-align: middle;
+  font-size: 0.95rem;
 }
 
-/* Column Width Control */
-.users-table th:nth-child(1), .users-table td:nth-child(1) { width: 22%; }  /* User */
-.users-table th:nth-child(2), .users-table td:nth-child(2) { width: 24%; }  /* Email */
-.users-table th:nth-child(3), .users-table td:nth-child(3) { width: 12%; }  /* Role */
-.users-table th:nth-child(4), .users-table td:nth-child(4) { width: 12%; }  /* Joined */
-.users-table th:nth-child(5), .users-table td:nth-child(5) { width: 11%; }  /* Streams */
-.users-table th:nth-child(6), .users-table td:nth-child(6) { width: 10%; }  /* Status */
-.users-table th:nth-child(7), .users-table td:nth-child(7) { width: 9%; }   /* Actions */
+.users-table tr:last-child td {
+  border-bottom: none;
+}
 
-/* Badges */
-.role-badge, .status-badge {
-  padding: 4px 10px;
+.users-table tr:hover td {
+  background: rgba(212,160,23,0.04);
+}
+
+/* ======================== USER INFO CELL ======================== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(212,160,23,0.15);
+  border: 1px solid rgba(212,160,23,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+/* ======================== BADGES ======================== */
+.role-badge {
+  padding: 5px 14px;
   border-radius: 9999px;
   font-size: 0.82rem;
   font-weight: 600;
+  background: rgba(212,160,23,0.12);
+  color: #d4a017;
+  border: 1px solid rgba(212,160,23,0.3);
+  white-space: nowrap;
 }
 
-.status-badge.active { background: #22c55e; color: black; }
-.status-badge.inactive { background: #ef4444; color: white; }
+.role-badge.artist {
+  background: rgba(139,92,246,0.12);
+  color: #a78bfa;
+  border-color: rgba(139,92,246,0.3);
+}
 
-/* Actions */
+.status-badge {
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: rgba(34,197,94,0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,0.3);
+}
+
+.status-badge.inactive {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+
+/* ======================== ACTION BUTTONS ======================== */
 .action-buttons {
   display: flex;
-  gap: 5px;
-  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .action-btn {
   background: transparent;
-  border: 1px solid rgba(212, 160, 23, 0.3);
-  color: #ccc;
-  padding: 6px;
-  border-radius: 8px;
+  border: 1px solid rgba(212,160,23,0.25);
+  color: #aaa;
+  padding: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .action-btn:hover {
   color: var(--gold);
   border-color: var(--gold);
+  transform: translateY(-1px);
 }
 
 .action-btn.delete:hover {
@@ -156,16 +281,37 @@
   border-color: #ef4444;
 }
 
-/* ==================== RESPONSIVE ==================== */
+/* ======================== ANIMATIONS ======================== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
+/* ======================== RESPONSIVE ======================== */
 @media (max-width: 1024px) {
   .dashboard-main {
     margin-left: 0;
-    padding: 1.8rem 1.4rem;
+    width: 100%;
+    padding: 5rem 1.8rem 2rem;
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard-main {
+    padding: 4.5rem 1.2rem 2rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.8rem;
+  }
+
+  .add-user-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .controls {
     flex-direction: column;
     align-items: stretch;
@@ -175,28 +321,22 @@
     width: 100%;
   }
 
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .add-user-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .users-table th,
-  .users-table td {
-    padding: 0.8rem 0.7rem;
+  .content-card {
+    border-radius: 14px;
   }
 }
 
 @media (max-width: 480px) {
+  .dashboard-main {
+    padding: 4rem 1rem 2rem;
+  }
+
   .page-header h1 {
     font-size: 2.4rem;
   }
-  .dashboard-main {
-    padding: 1.4rem 1rem;
+
+  .users-table th,
+  .users-table td {
+    padding: 0.85rem 0.8rem;
   }
 }

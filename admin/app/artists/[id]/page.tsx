@@ -43,16 +43,6 @@ interface Song {
   streams?: number;
 }
 
-const mainStyle: React.CSSProperties = {
-  flex: 1,
-  marginLeft: "280px",
-  padding: "2rem 2.5rem",
-  minHeight: "100vh",
-  width: "calc(100% - 280px)",
-  boxSizing: "border-box",
-  overflowX: "hidden",
-};
-
 export default function ArtistProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -128,7 +118,7 @@ export default function ArtistProfilePage() {
     return (
       <div className="dashboard-container">
         <Sidebar />
-        <div style={mainStyle}>
+        <div className="profile-main">
           <div className="profile-loading">
             <div className="loading-spinner" />
             <p>Loading artist profile...</p>
@@ -142,7 +132,7 @@ export default function ArtistProfilePage() {
     return (
       <div className="dashboard-container">
         <Sidebar />
-        <div style={mainStyle}>
+        <div className="profile-main">
           <div className="profile-loading">
             <p style={{ color: "#ef4444" }}>Artist not found.</p>
             <button className="back-btn" onClick={() => router.push("/artists")}>
@@ -158,7 +148,9 @@ export default function ArtistProfilePage() {
     <div className="dashboard-container">
       <Sidebar />
 
-      <div style={mainStyle}>
+      {/* ← CSS class replaces the old inline mainStyle object */}
+      <div className="profile-main">
+
         {/* Back */}
         <button className="back-btn" onClick={() => router.push("/artists")}>
           <ArrowLeft size={18} /> Back to Artists
@@ -274,7 +266,9 @@ export default function ArtistProfilePage() {
                               className="song-play-overlay"
                               onClick={() => handlePlay(song)}
                             >
-                              {playingId === song.id ? <span className="pause-icon">⏸</span> : <Play size={14} fill="white" />}
+                              {playingId === song.id
+                                ? <span className="pause-icon">⏸</span>
+                                : <Play size={14} fill="white" />}
                             </button>
                           </div>
                           <span className="song-title">{song.title}</span>
@@ -284,10 +278,18 @@ export default function ArtistProfilePage() {
                       <td>{song.streams?.toLocaleString() || 0}</td>
                       <td>
                         <div className="action-buttons">
-                          <button className="action-btn" title="Play / Pause" onClick={() => handlePlay(song)}>
+                          <button
+                            className="action-btn"
+                            title="Play / Pause"
+                            onClick={() => handlePlay(song)}
+                          >
                             <Play size={16} />
                           </button>
-                          <button className="action-btn delete" title="Delete Song" onClick={() => handleDeleteSong(song)}>
+                          <button
+                            className="action-btn delete"
+                            title="Delete Song"
+                            onClick={() => handleDeleteSong(song)}
+                          >
                             <Trash2 size={16} />
                           </button>
                         </div>
