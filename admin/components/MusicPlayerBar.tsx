@@ -35,6 +35,11 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
 
+  // Track whether a play() call is in-flight so we never
+  // pause() while it's still pending (which causes the AbortError)
+  const playingRef = useRef(false);
+  const pendingPlayRef = useRef(false);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -42,23 +47,46 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // ✅ Load + autoplay when song changes
+  // Load + autoplay when song changes — NO pause() in cleanup
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !song.audioUrl) return;
 
+    // Reset state for new song
+    setProgress(0);
+    setCurrentTime("0:00");
+    setDuration("0:00");
+    setIsPlaying(false);
+    playingRef.current = false;
+
     audio.src = song.audioUrl;
     audio.load();
-    audio.play()
-      .then(() => setIsPlaying(true))
-      .catch((err) => console.error("Playback failed:", err));
 
+    // Small delay so the browser finishes load() before play()
+    const timeout = setTimeout(() => {
+      pendingPlayRef.current = true;
+      audio.play()
+        .then(() => {
+          pendingPlayRef.current = false;
+          playingRef.current = true;
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          pendingPlayRef.current = false;
+          // Only log if it's not a deliberate abort
+          if (err.name !== "AbortError") {
+            console.error("Playback failed:", err);
+          }
+        });
+    }, 50);
+
+    // Cleanup: just cancel the timeout — never call pause() here
     return () => {
-      audio.pause();
+      clearTimeout(timeout);
     };
   }, [song.id, song.audioUrl]);
 
-  // ✅ Sync progress bar with real audio time
+  // Sync progress bar with real audio time
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -76,6 +104,7 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
 
     const onEnded = () => {
       setIsPlaying(false);
+      playingRef.current = false;
       setProgress(0);
     };
 
@@ -102,23 +131,48 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Don't toggle if a play() is still pending
+    if (pendingPlayRef.current) return;
+
     if (isPlaying) {
       audio.pause();
+      playingRef.current = false;
       setIsPlaying(false);
     } else {
+      pendingPlayRef.current = true;
       audio.play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => console.error("Playback failed:", err));
+        .then(() => {
+          pendingPlayRef.current = false;
+          playingRef.current = true;
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          pendingPlayRef.current = false;
+          if (err.name !== "AbortError") {
+            console.error("Playback failed:", err);
+          }
+        });
     }
   };
 
-  // ✅ Seek by clicking progress bar
+  // Handle close — safely stop audio
+  const handleClose = () => {
+    const audio = audioRef.current;
+    if (audio && !pendingPlayRef.current) {
+      audio.pause();
+      audio.src = "";
+    }
+    onClose();
+  };
+
+  // Seek by clicking progress bar
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const pct = x / rect.width;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
     audio.currentTime = pct * audio.duration;
   };
 
@@ -131,7 +185,6 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
 
   return (
     <>
-      {/* ✅ Hidden real audio element */}
       <audio ref={audioRef} preload="auto" />
 
       <div
@@ -201,7 +254,7 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
           </div>
         </div>
 
-        {/* Center: Waveform + Play Button */}
+        {/* Center: Waveform + Controls */}
         <div style={{
           flex: 1,
           display: "flex",
@@ -218,11 +271,12 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
               border: "none",
               color: "#000",
               fontSize: isMobile ? "1.2rem" : "1.4rem",
-              cursor: "pointer",
+              cursor: pendingPlayRef.current ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              opacity: pendingPlayRef.current ? 0.7 : 1,
             }}
           >
             {isPlaying ? "⏸" : "▶"}
@@ -258,11 +312,12 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
             })}
           </div>
 
-          {/* ✅ Clickable progress bar */}
+          {/* Clickable progress bar */}
           <div
             onClick={handleSeek}
             style={{
-              flex: 1,
+              flex: isMobile ? 1 : "none",
+              width: isMobile ? "auto" : "140px",
               height: "4px",
               background: "rgba(255,255,255,0.15)",
               borderRadius: "2px",
@@ -288,7 +343,7 @@ export default function MusicPlayerBar({ song, onClose }: MusicPlayerBarProps) {
             </span>
           )}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
               background: "none",
               border: "none",
