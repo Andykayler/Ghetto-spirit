@@ -1,10 +1,24 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePlayer, parseDuration, formatTime } from "./PlayerContext";
-import type { Track, Comment, CommentReply } from "./PlayerContext";
+import type { Track } from "./PlayerContext";
 
-// ─── ExpandedPlayer ───────────────────────────────────────────────────────────
+import {
+  recordStream,
+  toggleLikeInDb,
+  subscribeToTrackStats,
+  subscribeToComments,
+  addCommentToDb,
+  voteCommentInDb,
+  addReplyToDb,
+  voteReplyInDb,
+  downloadTrack,
+  type Comment,
+  type CommentReply,
+  type TrackStats,
+} from "./Expandedplayerservice";
+
 export function ExpandedPlayer() {
   const {
     currentTrack,
@@ -27,19 +41,18 @@ export function ExpandedPlayer() {
     artistTracks,
     queueIndex,
     queue,
-    streamCounts,
-    likes,
-    toggleLike,
-    comments,
-    addComment,
-    voteComment,
-    addReply,
-    voteReply,
   } = usePlayer();
 
   const [activeTab, setActiveTab] = useState<"queue" | "artist" | "comments">("queue");
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [stats, setStats] = useState<TrackStats>({ streams: 0, likes: 0, commentCount: 0, downloads: 0 });
+  const [isLiked, setIsLiked] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentVotes, setCommentVotes] = useState<Record<string, "like" | "dislike" | undefined>>({});
+  const [replyVotes, setReplyVotes] = useState<Record<string, "like" | "dislike" | undefined>>({});
   const [waveHeights, setWaveHeights] = useState<number[]>(
     Array.from({ length: 60 }, (_, i) => 10 + Math.sin(i * 0.5) * 22 + Math.random() * 18)
   );
@@ -54,27 +67,120 @@ export function ExpandedPlayer() {
     return () => { if (waveRef.current) clearInterval(waveRef.current); };
   }, [playing]);
 
+  useEffect(() => {
+    if (!currentTrack) return;
+    setStats({ streams: 0, likes: 0, commentCount: 0, downloads: 0 });
+    setIsLiked(false);
+    setComments([]);
+    setCommentVotes({});
+    setReplyVotes({});
+    const unsubStats = subscribeToTrackStats(currentTrack.id, setStats);
+    const unsubComments = subscribeToComments(currentTrack.id, setComments);
+    return () => {
+      unsubStats();
+      unsubComments();
+    };
+  }, [currentTrack?.id]);
+
+  const lastStreamedId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentTrack || !playing) return;
+    if (lastStreamedId.current === currentTrack.id) return;
+    lastStreamedId.current = currentTrack.id;
+    recordStream(currentTrack.id).catch(console.error);
+  }, [currentTrack?.id, playing]);
+
+  const handleToggleLike = useCallback(async () => {
+    if (!currentTrack) return;
+    const next = await toggleLikeInDb(currentTrack.id, isLiked);
+    setIsLiked(next);
+  }, [currentTrack, isLiked]);
+
+  const handleAddComment = useCallback(async () => {
+    if (!commentText.trim() || !currentTrack) return;
+    await addCommentToDb(currentTrack.id, commentAuthor, commentText);
+    setCommentText("");
+  }, [currentTrack, commentAuthor, commentText]);
+
+  const handleVoteComment = useCallback(async (commentId: string, vote: "like" | "dislike") => {
+    if (!currentTrack) return;
+    const prev = commentVotes[commentId];
+    const resolved = await voteCommentInDb(currentTrack.id, commentId, prev, vote);
+    setCommentVotes(v => ({ ...v, [commentId]: resolved }));
+  }, [currentTrack, commentVotes]);
+
+  const handleAddReply = useCallback(async (commentId: string, author: string, text: string) => {
+    if (!currentTrack) return;
+    await addReplyToDb(currentTrack.id, commentId, author, text);
+  }, [currentTrack]);
+
+  const handleVoteReply = useCallback(async (
+    commentId: string,
+    replyId: string,
+    vote: "like" | "dislike"
+  ) => {
+    if (!currentTrack) return;
+    const key = `${commentId}::${replyId}`;
+    const prev = replyVotes[key];
+    const resolved = await voteReplyInDb(currentTrack.id, commentId, replyId, prev, vote);
+    setReplyVotes(v => ({ ...v, [key]: resolved }));
+  }, [currentTrack, replyVotes]);
+
+  const handleDownload = useCallback(async () => {
+    if (!currentTrack) return;
+    const audioUrl = (currentTrack as any).audioUrl || (currentTrack as any).url;
+    if (!audioUrl) {
+      setDownloadError("No audio URL available for this track.");
+      setTimeout(() => setDownloadError(null), 4000);
+      return;
+    }
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const filename = `${currentTrack.artist} - ${currentTrack.title}.mp3`;
+      await downloadTrack(audioUrl, filename, currentTrack.id);
+    } catch (err: any) {
+      setDownloadError(err?.message || "Download failed.");
+      setTimeout(() => setDownloadError(null), 4000);
+    } finally {
+      setDownloading(false);
+    }
+  }, [currentTrack]);
+
   if (!expanded || !currentTrack) return null;
 
-  const totalSec = parseDuration(currentTrack.duration);
+  const totalSec = (() => {
+    const d = currentTrack.duration;
+    if (!d || d === "--:--") return 0;
+    // Handle "m:ss" or "mm:ss" or plain seconds number
+    if (typeof d === "number") return d;
+    const parts = String(d).split(":").map(Number);
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] * 60 + parts[1];
+    }
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    const n = parseFloat(String(d));
+    return isNaN(n) ? 0 : n;
+  })();
   const currentSec = Math.floor((progress / 100) * totalSec);
   const artistCount = artistTrackCount(currentTrack.artist);
   const artistSongs = artistTracks(currentTrack.artist);
   const upNext = queue[(queueIndex + 1) % queue.length];
   const coverSrc = currentTrack.coverUrl || currentTrack.thumbnail;
-  const streams = streamCounts[currentTrack.id] || 0;
-  const isLiked = likes[currentTrack.id] || false;
-  const trackComments = comments.filter(c => c.trackId === currentTrack.id);
 
-  const handleSubmitComment = () => {
-    if (!commentText.trim()) return;
-    addComment(currentTrack.id, commentAuthor, commentText);
-    setCommentText("");
-  };
+  const enrichedComments: Comment[] = comments.map(c => ({
+    ...c,
+    userVote: commentVotes[c.id],
+    replies: c.replies.map(r => ({
+      ...r,
+      userVote: replyVotes[`${c.id}::${r.id}`],
+    })),
+  }));
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={() => setExpanded(false)}
         style={{
@@ -85,7 +191,6 @@ export function ExpandedPlayer() {
         }}
       />
 
-      {/* Panel */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
         height: "82vh",
@@ -95,7 +200,6 @@ export function ExpandedPlayer() {
         flexDirection: "column",
         animation: "slideUp 0.35s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
           <div
             style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)", cursor: "pointer" }}
@@ -104,13 +208,10 @@ export function ExpandedPlayer() {
           />
         </div>
 
-        {/* Main content */}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 380px", overflow: "hidden" }}>
 
-          {/* ── Left: Art + info + controls ── */}
           <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
 
-            {/* Art */}
             <div style={{ position: "relative", width: "100%", maxWidth: 300, aspectRatio: "1", margin: "0 auto" }}>
               <img
                 src={coverSrc}
@@ -134,7 +235,6 @@ export function ExpandedPlayer() {
               )}
             </div>
 
-            {/* Song info + like */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                 <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
@@ -158,31 +258,65 @@ export function ExpandedPlayer() {
                   </div>
                 </div>
 
-                {/* Like button */}
-                <button
-                  onClick={() => toggleLike(currentTrack.id)}
-                  title={isLiked ? "Unlike" : "Like"}
-                  style={{
-                    background: isLiked ? "rgba(212,175,55,0.15)" : "none",
-                    border: isLiked ? "1px solid rgba(212,175,55,0.5)" : "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    color: isLiked ? "#D4AF37" : "rgba(255,255,255,0.4)",
-                    fontSize: 20,
-                    padding: "4px 8px",
-                    flexShrink: 0,
-                    transition: "all 0.2s",
-                    transform: isLiked ? "scale(1.15)" : "scale(1)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                  onMouseEnter={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
-                  onMouseLeave={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
-                >
-                  {isLiked ? "♥" : "♡"}
-                </button>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <button
+                    onClick={handleToggleLike}
+                    title={isLiked ? "Unlike" : "Like"}
+                    style={{
+                      background: isLiked ? "rgba(212,175,55,0.15)" : "none",
+                      border: isLiked ? "1px solid rgba(212,175,55,0.5)" : "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      color: isLiked ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                      fontSize: 20,
+                      padding: "4px 8px",
+                      transition: "all 0.2s",
+                      transform: isLiked ? "scale(1.15)" : "scale(1)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                    onMouseEnter={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
+                    onMouseLeave={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
+                  >
+                    {isLiked ? "♥" : "♡"}
+                  </button>
+
+                  <button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    title={downloading ? "Downloading…" : "Download track"}
+                    style={{
+                      background: downloading ? "rgba(212,175,55,0.1)" : "none",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: 6,
+                      cursor: downloading ? "default" : "pointer",
+                      color: downloading ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                      fontSize: 16,
+                      padding: "4px 8px",
+                      transition: "all 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                    onMouseEnter={e => { if (!downloading) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
+                    onMouseLeave={e => { if (!downloading) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
+                  >
+                    {downloading ? "⏳" : "⬇"}
+                  </button>
+                </div>
               </div>
+
+              {downloadError && (
+                <div style={{
+                  fontFamily: "'Barlow', sans-serif", fontSize: 11,
+                  color: "#f87171", background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.25)",
+                  borderRadius: 4, padding: "5px 10px", marginTop: 6,
+                }}>
+                  {downloadError}
+                </div>
+              )}
 
               {(currentTrack.genre || currentTrack.category) && (
                 <span style={{
@@ -195,15 +329,14 @@ export function ExpandedPlayer() {
                 </span>
               )}
 
-              {/* Stats row — plays + comments only, no minutes */}
-              <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                <StatBadge value={streams} label="Plays" />
-                <StatBadge value={isLiked ? "♥" : "♡"} label="Liked" gold={isLiked} />
-                <StatBadge value={trackComments.length} label="Comments" />
+              <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+                <StatBadge value={stats.streams} label="Plays" />
+                <StatBadge value={stats.likes} label="Likes" gold={stats.likes > 0} />
+                <StatBadge value={stats.downloads} label="Downloads" />
+                <StatBadge value={stats.commentCount} label="Comments" />
               </div>
             </div>
 
-            {/* Waveform */}
             <div
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -225,7 +358,6 @@ export function ExpandedPlayer() {
               })}
             </div>
 
-            {/* Seek bar + time — shows elapsed / total duration */}
             <div>
               <div
                 onClick={(e) => {
@@ -254,12 +386,11 @@ export function ExpandedPlayer() {
                   {formatTime(currentSec)}
                 </span>
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.06em" }}>
-                  {currentTrack.duration || "--:--"}
+                  {totalSec > 0 ? formatTime(totalSec) : (currentTrack.duration || "--:--")}
                 </span>
               </div>
             </div>
 
-            {/* Transport controls */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
               <ControlBtn active={shuffle} onClick={toggleShuffle} title="Shuffle">
                 <ShuffleIcon />
@@ -302,7 +433,6 @@ export function ExpandedPlayer() {
               </ControlBtn>
             </div>
 
-            {/* Volume */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <VolumeIcon muted={volume === 0} />
               <input
@@ -315,7 +445,6 @@ export function ExpandedPlayer() {
               </span>
             </div>
 
-            {/* Platform links */}
             <div style={{ display: "flex", gap: 12, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16 }}>
               <PlatformBtn label="Spotify" color="#1DB954" icon={<SpotifyIcon />} />
               <PlatformBtn label="Apple Music" color="#FC3C44" icon={<AppleIcon />} />
@@ -323,7 +452,6 @@ export function ExpandedPlayer() {
             </div>
           </div>
 
-          {/* ── Center: Tabs + content ── */}
           <div style={{ display: "flex", flexDirection: "column", borderRight: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
             <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
               {(["queue", "artist", "comments"] as const).map((tab) => (
@@ -342,7 +470,7 @@ export function ExpandedPlayer() {
                     ? `Queue (${queue.length})`
                     : tab === "artist"
                     ? `Artist (${artistCount})`
-                    : `Comments (${trackComments.length})`}
+                    : `Comments (${stats.commentCount})`}
                 </button>
               ))}
             </div>
@@ -361,21 +489,20 @@ export function ExpandedPlayer() {
               )}
               {activeTab === "comments" && (
                 <CommentsTab
-                  comments={trackComments}
+                  comments={enrichedComments}
                   author={commentAuthor}
                   text={commentText}
                   onAuthorChange={setCommentAuthor}
                   onTextChange={setCommentText}
-                  onSubmit={handleSubmitComment}
-                  onVote={voteComment}
-                  onReply={addReply}
-                  onVoteReply={voteReply}
+                  onSubmit={handleAddComment}
+                  onVote={handleVoteComment}
+                  onReply={handleAddReply}
+                  onVoteReply={handleVoteReply}
                 />
               )}
             </div>
           </div>
 
-          {/* ── Right: Up Next ── */}
           <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{
               padding: "16px 20px 12px",
@@ -453,7 +580,6 @@ export function ExpandedPlayer() {
   );
 }
 
-// ─── StatBadge ────────────────────────────────────────────────────────────────
 function StatBadge({ value, label, gold = false }: { value: string | number; label: string; gold?: boolean }) {
   return (
     <div style={{
@@ -461,8 +587,8 @@ function StatBadge({ value, label, gold = false }: { value: string | number; lab
       background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)",
       borderRadius: 6, padding: "6px 14px", minWidth: 64,
     }}>
-      <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20, color: gold ? "#D4AF37" : "#D4AF37", lineHeight: 1 }}>
-        {value}
+      <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20, color: "#D4AF37", lineHeight: 1 }}>
+        {typeof value === "number" ? value.toLocaleString() : value}
       </span>
       <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, letterSpacing: "0.18em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginTop: 2 }}>
         {label}
@@ -471,17 +597,8 @@ function StatBadge({ value, label, gold = false }: { value: string | number; lab
   );
 }
 
-// ─── CommentsTab ──────────────────────────────────────────────────────────────
 function CommentsTab({
-  comments,
-  author,
-  text,
-  onAuthorChange,
-  onTextChange,
-  onSubmit,
-  onVote,
-  onReply,
-  onVoteReply,
+  comments, author, text, onAuthorChange, onTextChange, onSubmit, onVote, onReply, onVoteReply,
 }: {
   comments: Comment[];
   author: string;
@@ -495,7 +612,6 @@ function CommentsTab({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Comment input */}
       <div style={{
         padding: "16px 20px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -519,20 +635,15 @@ function CommentsTab({
             rows={2}
             style={{ ...inputStyle, flex: 1, resize: "none" } as React.CSSProperties}
           />
-          <button
-            onClick={onSubmit}
-            disabled={!text.trim()}
-            style={postBtnStyle(!!text.trim())}
-          >
+          <button onClick={onSubmit} disabled={!text.trim()} style={postBtnStyle(!!text.trim())}>
             Post
           </button>
         </div>
         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
-          Press Enter to post
+          Press Enter to post · Comments are always visible to everyone
         </div>
       </div>
 
-      {/* Comments list */}
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
         {comments.length === 0 ? (
           <div style={{ padding: "32px 20px", textAlign: "center" }}>
@@ -543,13 +654,7 @@ function CommentsTab({
           </div>
         ) : (
           comments.map(c => (
-            <CommentItem
-              key={c.id}
-              comment={c}
-              onVote={onVote}
-              onReply={onReply}
-              onVoteReply={onVoteReply}
-            />
+            <CommentItem key={c.id} comment={c} onVote={onVote} onReply={onReply} onVoteReply={onVoteReply} />
           ))
         )}
       </div>
@@ -557,12 +662,8 @@ function CommentsTab({
   );
 }
 
-// ─── CommentItem ──────────────────────────────────────────────────────────────
 function CommentItem({
-  comment,
-  onVote,
-  onReply,
-  onVoteReply,
+  comment, onVote, onReply, onVoteReply,
 }: {
   comment: Comment;
   onVote: (id: string, vote: "like" | "dislike") => void;
@@ -570,7 +671,7 @@ function CommentItem({
   onVoteReply: (commentId: string, replyId: string, vote: "like" | "dislike") => void;
 }) {
   const [showReplyBox, setShowReplyBox] = useState(false);
-  const [showReplies, setShowReplies] = useState(false);
+  const [showReplies, setShowReplies] = useState(true);
   const [replyAuthor, setReplyAuthor] = useState("");
   const [replyText, setReplyText] = useState("");
 
@@ -579,7 +680,6 @@ function CommentItem({
     onReply(comment.id, replyAuthor, replyText);
     setReplyText("");
     setShowReplyBox(false);
-    setShowReplies(true);
   };
 
   const avatarColor = `hsl(${(comment.author.charCodeAt(0) * 7) % 360}, 50%, 35%)`;
@@ -587,14 +687,11 @@ function CommentItem({
   return (
     <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
       <div style={{ padding: "14px 20px 10px" }}>
-        {/* Author row */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
           <div style={{
-            width: 28, height: 28, borderRadius: "50%",
-            background: avatarColor,
+            width: 28, height: 28, borderRadius: "50%", background: avatarColor,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff",
-            flexShrink: 0,
+            fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff", flexShrink: 0,
           }}>
             {comment.author[0]?.toUpperCase() || "?"}
           </div>
@@ -606,33 +703,13 @@ function CommentItem({
           </span>
         </div>
 
-        {/* Text */}
-        <p style={{
-          fontFamily: "'Barlow', sans-serif", fontSize: 13,
-          color: "rgba(255,255,255,0.75)", margin: "0 0 10px 36px", lineHeight: 1.5,
-        }}>
+        <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", margin: "0 0 10px 36px", lineHeight: 1.5 }}>
           {comment.text}
         </p>
 
-        {/* Action row */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, paddingLeft: 36 }}>
-          {/* Like */}
-          <VoteBtn
-            icon="👍"
-            count={comment.likes}
-            active={comment.userVote === "like"}
-            activeColor="#4ade80"
-            onClick={() => onVote(comment.id, "like")}
-          />
-          {/* Dislike */}
-          <VoteBtn
-            icon="👎"
-            count={comment.dislikes}
-            active={comment.userVote === "dislike"}
-            activeColor="#f87171"
-            onClick={() => onVote(comment.id, "dislike")}
-          />
-          {/* Reply toggle */}
+          <VoteBtn icon="👍" count={comment.likes} active={comment.userVote === "like"} activeColor="#4ade80" onClick={() => onVote(comment.id, "like")} />
+          <VoteBtn icon="👎" count={comment.dislikes} active={comment.userVote === "dislike"} activeColor="#f87171" onClick={() => onVote(comment.id, "dislike")} />
           <button
             onClick={() => setShowReplyBox(r => !r)}
             style={{
@@ -640,15 +717,13 @@ function CommentItem({
               fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
               fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
               color: showReplyBox ? "#D4AF37" : "rgba(255,255,255,0.35)",
-              padding: "3px 6px",
-              transition: "color 0.2s",
+              padding: "3px 6px", transition: "color 0.2s",
             }}
             onMouseEnter={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)"; }}
             onMouseLeave={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
           >
             ↩ Reply
           </button>
-          {/* Show replies toggle */}
           {comment.replies.length > 0 && (
             <button
               onClick={() => setShowReplies(r => !r)}
@@ -656,9 +731,7 @@ function CommentItem({
                 background: "none", border: "none", cursor: "pointer",
                 fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
                 fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
-                color: "rgba(212,175,55,0.6)",
-                padding: "3px 6px",
-                transition: "color 0.2s",
+                color: "rgba(212,175,55,0.6)", padding: "3px 6px", transition: "color 0.2s",
               }}
             >
               {showReplies ? "▲ Hide" : `▼ ${comment.replies.length} repl${comment.replies.length === 1 ? "y" : "ies"}`}
@@ -666,7 +739,6 @@ function CommentItem({
           )}
         </div>
 
-        {/* Reply input */}
         {showReplyBox && (
           <div style={{ marginTop: 10, paddingLeft: 36, display: "flex", flexDirection: "column", gap: 6 }}>
             <input
@@ -684,11 +756,7 @@ function CommentItem({
                 rows={2}
                 style={{ ...inputStyle, flex: 1, resize: "none", fontSize: 12 } as React.CSSProperties}
               />
-              <button
-                onClick={submitReply}
-                disabled={!replyText.trim()}
-                style={postBtnStyle(!!replyText.trim())}
-              >
+              <button onClick={submitReply} disabled={!replyText.trim()} style={postBtnStyle(!!replyText.trim())}>
                 Post
               </button>
             </div>
@@ -696,15 +764,10 @@ function CommentItem({
         )}
       </div>
 
-      {/* Replies */}
       {showReplies && comment.replies.length > 0 && (
         <div style={{ background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {comment.replies.map(reply => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              onVote={(vote) => onVoteReply(comment.id, reply.id, vote)}
-            />
+            <ReplyItem key={reply.id} reply={reply} onVote={(vote) => onVoteReply(comment.id, reply.id, vote)} />
           ))}
         </div>
       )}
@@ -712,14 +775,7 @@ function CommentItem({
   );
 }
 
-// ─── ReplyItem ────────────────────────────────────────────────────────────────
-function ReplyItem({
-  reply,
-  onVote,
-}: {
-  reply: CommentReply;
-  onVote: (vote: "like" | "dislike") => void;
-}) {
+function ReplyItem({ reply, onVote }: { reply: CommentReply; onVote: (vote: "like" | "dislike") => void }) {
   const avatarColor = `hsl(${(reply.author.charCodeAt(0) * 11) % 360}, 45%, 30%)`;
   return (
     <div style={{ padding: "10px 20px 10px 52px", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
@@ -738,10 +794,7 @@ function ReplyItem({
           {new Date(reply.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
-      <p style={{
-        fontFamily: "'Barlow', sans-serif", fontSize: 12,
-        color: "rgba(255,255,255,0.6)", margin: "0 0 8px 29px", lineHeight: 1.5,
-      }}>
+      <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", margin: "0 0 8px 29px", lineHeight: 1.5 }}>
         {reply.text}
       </p>
       <div style={{ display: "flex", gap: 6, paddingLeft: 29 }}>
@@ -752,15 +805,8 @@ function ReplyItem({
   );
 }
 
-// ─── VoteBtn ──────────────────────────────────────────────────────────────────
-function VoteBtn({
-  icon, count, active, activeColor, onClick,
-}: {
-  icon: string;
-  count: number;
-  active: boolean;
-  activeColor: string;
-  onClick: () => void;
+function VoteBtn({ icon, count, active, activeColor, onClick }: {
+  icon: string; count: number; active: boolean; activeColor: string; onClick: () => void;
 }) {
   return (
     <button
@@ -784,7 +830,6 @@ function VoteBtn({
   );
 }
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.05)",
   border: "1px solid rgba(255,255,255,0.1)",
@@ -815,7 +860,6 @@ const postBtnStyle = (enabled: boolean): React.CSSProperties => ({
   flexShrink: 0,
 });
 
-// ─── QueueTab ─────────────────────────────────────────────────────────────────
 function QueueTab({ queue, currentIndex, onPlay }: { queue: Track[]; currentIndex: number; onPlay: (t: Track) => void }) {
   return (
     <>
@@ -866,7 +910,6 @@ function QueueTab({ queue, currentIndex, onPlay }: { queue: Track[]; currentInde
   );
 }
 
-// ─── ArtistTab ────────────────────────────────────────────────────────────────
 function ArtistTab({ artist, tracks, currentId, onPlay }: { artist: string; tracks: Track[]; currentId: string; onPlay: (t: Track) => void }) {
   return (
     <div>
@@ -914,7 +957,6 @@ function ArtistTab({ artist, tracks, currentId, onPlay }: { artist: string; trac
   );
 }
 
-// ─── MiniTrackRow ─────────────────────────────────────────────────────────────
 function MiniTrackRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
   return (
     <div
@@ -933,7 +975,6 @@ function MiniTrackRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
   );
 }
 
-// ─── PlayingBars ──────────────────────────────────────────────────────────────
 function PlayingBars() {
   return (
     <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 16, width: 20 }}>
@@ -954,7 +995,6 @@ function PlayingBars() {
   );
 }
 
-// ─── Control button ───────────────────────────────────────────────────────────
 function ControlBtn({ children, onClick, active = false, title }: { children: React.ReactNode; onClick: () => void; active?: boolean; title?: string }) {
   return (
     <button onClick={onClick} title={title} style={{
@@ -971,7 +1011,6 @@ function ControlBtn({ children, onClick, active = false, title }: { children: Re
   );
 }
 
-// ─── Platform button ──────────────────────────────────────────────────────────
 function PlatformBtn({ label, color, icon }: { label: string; color: string; icon: React.ReactNode }) {
   return (
     <button title={label} style={{
@@ -988,7 +1027,6 @@ function PlatformBtn({ label, color, icon }: { label: string; color: string; ico
   );
 }
 
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
 const IC = (d: string, s = 22) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d={d} /></svg>
 );
