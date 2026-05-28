@@ -17,6 +17,7 @@ import {
 import { db } from "@/lib/firebase";
 import { archiveSong } from "../../lib/archiveHelpers";
 import { toast } from "react-hot-toast";
+import { getSongStreamStats } from "./songstreams";
 
 interface Song {
   id: string;
@@ -25,13 +26,14 @@ interface Song {
   genre?: string;
   audioUrl?: string;
   coverUrl?: string;
-  streams?: number;
   createdAt?: any;
   duration?: string;
 }
 
 export default function MusicLibrary() {
   const [songs, setSongs] = useState<Song[]>([]);
+  // Map of songId → { streams, downloads } sourced from the `tracks` collection
+  const [streamStats, setStreamStats] = useState<Map<string, { streams: number; downloads: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
@@ -45,12 +47,23 @@ export default function MusicLibrary() {
     const q = query(collection(db, "songs"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(
       q,
-      (snapshot) => {
+      async (snapshot) => {
         const data = snapshot.docs.map((d) => ({
           id: d.id,
           ...d.data(),
         })) as Song[];
         setSongs(data);
+
+        // Fetch real stream/download counts from `tracks` for all loaded songs
+        if (data.length > 0) {
+          try {
+            const statsMap = await getSongStreamStats(data.map((s) => s.id));
+            setStreamStats(statsMap);
+          } catch (err) {
+            console.error("Failed to load stream stats:", err);
+          }
+        }
+
         setLoading(false);
       },
       (error) => {
@@ -114,8 +127,7 @@ export default function MusicLibrary() {
     }
   };
 
-  const formatStreams = (n?: number) => {
-    if (!n) return "0";
+  const formatStreams = (n: number) => {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return String(n);
@@ -173,75 +185,78 @@ export default function MusicLibrary() {
                 </tr>
               </thead>
               <tbody>
-                {filteredSongs.map((song) => (
-                  <tr key={song.id}>
-                    <td className="song-title-cell">
-                      <div className="song-info">
-                        {song.coverUrl ? (
-                          <img
-                            src={song.coverUrl}
-                            alt={song.title}
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 4,
-                              objectFit: "cover",
-                              flexShrink: 0,
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 4,
-                              background: "linear-gradient(135deg, #d4a017, #8b0000)",
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                        <span>{song.title}</span>
-                      </div>
-                    </td>
-                    <td>{song.artist}</td>
-                    <td>{song.genre || "—"}</td>
-                    <td>{formatStreams(song.streams)}</td>
-                    <td>{formatDate(song.createdAt)}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="action-btn"
-                          onClick={() => handlePlay(song)}
-                          title="Play"
-                        >
-                          <Play size={18} />
-                        </button>
-                        <button
-                          className="action-btn"
-                          onClick={() => handleEdit(song)}
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          className="action-btn"
-                          onClick={() => handleDownload(song)}
-                          disabled={downloadingId === song.id}
-                          title="Download"
-                        >
-                          <Download size={18} />
-                        </button>
-                        <button
-                          className="action-btn delete"
-                          onClick={() => handleDeleteClick(song)}
-                          title="Archive"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredSongs.map((song) => {
+                  const stats = streamStats.get(song.id);
+                  return (
+                    <tr key={song.id}>
+                      <td className="song-title-cell">
+                        <div className="song-info">
+                          {song.coverUrl ? (
+                            <img
+                              src={song.coverUrl}
+                              alt={song.title}
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 4,
+                                objectFit: "cover",
+                                flexShrink: 0,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 4,
+                                background: "linear-gradient(135deg, #d4a017, #8b0000)",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          <span>{song.title}</span>
+                        </div>
+                      </td>
+                      <td>{song.artist}</td>
+                      <td>{song.genre || "—"}</td>
+                      <td>{formatStreams(stats?.streams ?? 0)}</td>
+                      <td>{formatDate(song.createdAt)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="action-btn"
+                            onClick={() => handlePlay(song)}
+                            title="Play"
+                          >
+                            <Play size={18} />
+                          </button>
+                          <button
+                            className="action-btn"
+                            onClick={() => handleEdit(song)}
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            className="action-btn"
+                            onClick={() => handleDownload(song)}
+                            disabled={downloadingId === song.id}
+                            title="Download"
+                          >
+                            <Download size={18} />
+                          </button>
+                          <button
+                            className="action-btn delete"
+                            onClick={() => handleDeleteClick(song)}
+                            title="Archive"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
