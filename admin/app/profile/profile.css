@@ -1,17 +1,6 @@
 /* app/profile/profile.css */
 
-/* ==================== SHELL ==================== */
-.app-shell {
-  display: flex;
-  min-height: 100vh;
-  background: #0d0d0d;
-}
-
-.profile-main {
-  flex: 1;
-  margin-left: 260px; /* match sidebar width */
-  padding: 2.4rem 2.8rem;
-  max-width: 1100px;@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
 /* ======================== SHELL ======================== */
 .dash-shell {
@@ -25,9 +14,9 @@
 .dash-main {
   flex: 1;
   margin-left: 260px;
-  padding: 2.6rem 3rem;
-  max-width: 1200px;
+  padding: 2rem 2.4rem;
   box-sizing: border-box;
+  max-width: 1200px;
 }
 
 /* ======================== HEADER ======================== */
@@ -35,25 +24,25 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2.8rem;
+  margin-bottom: 1.6rem;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .dash-eyebrow {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 4px;
   color: #d4a017;
   font-weight: 500;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   text-transform: uppercase;
 }
 
 .dash-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  font-size: clamp(2rem, 4vw, 3rem);
   color: white;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   letter-spacing: 1px;
   line-height: 1;
 }
@@ -66,7 +55,7 @@
 
 .dash-subtitle {
   color: #555;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 300;
   margin: 0;
 }
@@ -75,14 +64,14 @@
 .save-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: #d4a017;
   color: #0a0a0a;
   border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
+  border-radius: 10px;
+  padding: 10px 20px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.3s;
   align-self: flex-start;
@@ -90,302 +79,6 @@
 
 .save-btn:hover:not(:disabled) {
   background: #f0c040;
-  transform: translateY(-2px);
-}
-
-.save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.save-btn.saved {
-  background: #22c55e;
-  color: white;
-}
-
-.btn-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0,0,0,0.3);
-  border-top-color: #0a0a0a;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ======================== SAVE BANNER ======================== */
-.save-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
-  border-radius: 12px;
-  padding: 0.9rem 1.4rem;
-  font-size: 0.95rem;
-  margin-bottom: 2rem;
-}
-
-/* ======================== PROFILE GRID ======================== */
-.profile-grid {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2rem;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ======================== CARDS ======================== */
-.profile-card {
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(212,160,23,0.14);
-  border-radius: 20px;
-  padding: 2rem;
-  transition: border-color 0.3s;
-}
-
-.profile-card:hover {
-  border-color: rgba(212,160,23,0.3);
-}
-
-/* Avatar Card */
-.avatar-card {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.avatar-glow-wrap {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.avatar-ring {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(212,160,23,0.3), rgba(212,160,23,0.08));
-  border: 4px solid #d4a017;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  box-shadow: 0 0 0 8px rgba(212,160,23,0.1);
-}
-
-.profile-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-avatar-initials {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 3rem;
-  color: #d4a017;
-}
-
-.avatar-change-btn {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 36px;
-  height: 36px;
-  background: #d4a017;
-  color: #0a0a0a;
-  border: 3px solid #0a0a0a;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.avatar-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.8rem;
-  margin: 0.8rem 0 0.3rem;
-}
-
-.avatar-role-badge {
-  background: rgba(212,160,23,0.15);
-  color: #d4a017;
-  padding: 5px 14px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.avatar-email {
-  color: #777;
-  margin-top: 0.4rem;
-}
-
-.avatar-stats {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-top: 1.8rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid rgba(212,160,23,0.1);
-  width: 100%;
-}
-
-/* Right Side */
-.profile-right {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* Form Styles */
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1.6rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212,160,23,0.1);
-}
-
-.card-header h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.45rem;
-  margin: 0;
-  letter-spacing: 1px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.4rem;
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-.input-wrap {
-  position: relative;
-}
-
-.input-wrap input,
-.form-group textarea {
-  width: 100%;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(212,160,23,0.2);
-  border-radius: 12px;
-  padding: 0.85rem 1rem 0.85rem 2.6rem;
-  color: white;
-  font-size: 0.95rem;
-}
-
-.input-wrap input:focus,
-.form-group textarea:focus {
-  border-color: #d4a017;
-  background: rgba(212,160,23,0.05);
-}
-
-.input-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #666;
-}
-
-.pw-toggle {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #777;
-  cursor: pointer;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .dash-main {
-    margin-left: 0;
-    padding: 5rem 1.8rem 2rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-}
-
-@media (max-width: 768px) {
-  .profile-main {
-    margin-left: 0;
-    padding: 5rem 1.2rem 2rem;
-  }
-}
-
-/* ==================== PAGE HEADER ==================== */
-.profile-page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.profile-page-label {
-  color: var(--gold, #d4a017);
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 3px;
-  margin: 0 0 0.25rem;
-}
-
-.profile-page-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.4rem, 5vw, 3.6rem);
-  color: white;
-  margin: 0;
-  line-height: 1;
-  letter-spacing: 1px;
-}
-
-/* ==================== SAVE BUTTON ==================== */
-.save-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--gold, #d4a017);
-  color: #0d0d0d;
-  border: none;
-  border-radius: 10px;
-  padding: 0.65rem 1.6rem;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s, background 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.save-btn:hover:not(:disabled) {
-  opacity: 0.88;
   transform: translateY(-1px);
 }
 
@@ -403,7 +96,7 @@
   width: 14px;
   height: 14px;
   border: 2px solid rgba(0,0,0,0.3);
-  border-top-color: #0d0d0d;
+  border-top-color: #0a0a0a;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -413,7 +106,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* ==================== SAVE BANNER ==================== */
+/* ======================== SAVE BANNER ======================== */
 .save-banner {
   display: flex;
   align-items: center;
@@ -422,66 +115,64 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
   color: #22c55e;
   border-radius: 10px;
-  padding: 0.75rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.88rem;
+  margin-bottom: 1.2rem;
   animation: slideDown 0.3s ease;
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ==================== GRID ==================== */
+/* ======================== PROFILE GRID ======================== */
 .profile-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 1.8rem;
+  grid-template-columns: 260px 1fr;
+  gap: 1.4rem;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ==================== CARDS ==================== */
+/* ======================== CARDS ======================== */
 .profile-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(212, 160, 23, 0.14);
-  border-radius: 20px;
-  padding: 2rem 1.8rem;
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
-/* ==================== AVATAR CARD ==================== */
+.profile-card:hover {
+  border-color: rgba(212,160,23,0.28);
+}
+
+/* ======================== AVATAR CARD ======================== */
 .avatar-card {
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 
 .avatar-glow-wrap {
   position: relative;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
 }
 
 .avatar-ring {
-  width: 108px;
-  height: 108px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(212,160,23,0.25), rgba(212,160,23,0.05));
-  border: 3px solid var(--gold, #d4a017);
-  box-shadow: 0 0 0 6px rgba(212, 160, 23, 0.1), 0 12px 36px rgba(0,0,0,0.5);
+  border: 3px solid #d4a017;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  box-shadow: 0 0 0 6px rgba(212,160,23,0.08);
 }
 
 .profile-avatar-img {
@@ -493,9 +184,8 @@
 
 .profile-avatar-initials {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.8rem;
-  color: var(--gold, #d4a017);
-  letter-spacing: 2px;
+  font-size: 2.6rem;
+  color: #d4a017;
   line-height: 1;
 }
 
@@ -503,12 +193,12 @@
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
+  background: #d4a017;
+  color: #0a0a0a;
+  border: 2px solid #0a0a0a;
   border-radius: 50%;
-  background: var(--gold, #d4a017);
-  color: #0d0d0d;
-  border: 2px solid #0d0d0d;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -523,7 +213,7 @@
 
 .avatar-name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   color: white;
   margin: 0;
   letter-spacing: 1px;
@@ -534,103 +224,65 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(212, 160, 23, 0.15);
-  border: 1px solid rgba(212, 160, 23, 0.3);
-  color: var(--gold, #d4a017);
-  font-size: 0.78rem;
+  background: rgba(212,160,23,0.15);
+  border: 1px solid rgba(212,160,23,0.3);
+  color: #d4a017;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 4px 12px;
+  padding: 3px 11px;
   border-radius: 9999px;
 }
 
 .avatar-email {
   color: #888;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   margin: 0;
+  word-break: break-all;
 }
 
-/* Avatar stats strip */
-.avatar-stats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  margin-top: 1.2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgba(212, 160, 23, 0.1);
-  width: 100%;
-}
-
-.av-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.av-stat span {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  color: white;
-  line-height: 1;
-}
-
-.av-stat label {
-  font-size: 0.7rem;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.av-stat-divider {
-  width: 1px;
-  height: 32px;
-  background: rgba(212, 160, 23, 0.15);
-}
-
-/* ==================== RIGHT COLUMN ==================== */
+/* ======================== RIGHT COLUMN ======================== */
 .profile-right {
   display: flex;
   flex-direction: column;
-  gap: 1.8rem;
+  gap: 1.2rem;
 }
 
-/* ==================== CARD HEADER ==================== */
+/* ======================== CARD HEADER ======================== */
 .card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 1.6rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212, 160, 23, 0.12);
+  gap: 8px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(212,160,23,0.12);
 }
 
 .card-header h3 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: white;
   margin: 0;
   letter-spacing: 1px;
 }
 
 .card-header-icon {
-  color: var(--gold, #d4a017);
+  color: #d4a017;
   flex-shrink: 0;
 }
 
-/* ==================== FORM ==================== */
+/* ======================== FORM ======================== */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.2rem;
+  gap: 0.9rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .form-group.full-width {
@@ -638,14 +290,14 @@
 }
 
 .form-group label {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #aaa;
+  color: #888;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-/* Input wrapper with icon */
+/* Input wrapper */
 .input-wrap {
   position: relative;
   display: flex;
@@ -654,7 +306,7 @@
 
 .input-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   color: #555;
   pointer-events: none;
   flex-shrink: 0;
@@ -662,15 +314,16 @@
 
 .input-wrap input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 160, 23, 0.18);
-  border-radius: 10px;
-  padding: 0.7rem 1rem 0.7rem 2.5rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,160,23,0.18);
+  border-radius: 9px;
+  padding: 0.52rem 1rem 0.52rem 2.2rem;
   color: white;
-  font-size: 0.92rem;
+  font-size: 0.87rem;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .input-wrap input::placeholder {
@@ -678,24 +331,25 @@
 }
 
 .input-wrap input:focus {
-  border-color: var(--gold, #d4a017);
-  background: rgba(212, 160, 23, 0.05);
+  border-color: #d4a017;
+  background: rgba(212,160,23,0.05);
 }
 
 /* Textarea */
 .form-group textarea {
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 160, 23, 0.18);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,160,23,0.18);
+  border-radius: 9px;
+  padding: 0.52rem 0.9rem;
   color: white;
-  font-size: 0.92rem;
+  font-size: 0.87rem;
   outline: none;
   resize: vertical;
   font-family: inherit;
   transition: border-color 0.2s, background 0.2s;
   box-sizing: border-box;
+  min-height: 60px;
 }
 
 .form-group textarea::placeholder {
@@ -703,26 +357,26 @@
 }
 
 .form-group textarea:focus {
-  border-color: var(--gold, #d4a017);
-  background: rgba(212, 160, 23, 0.05);
+  border-color: #d4a017;
+  background: rgba(212,160,23,0.05);
 }
 
-/* ==================== PASSWORD ==================== */
+/* ======================== PASSWORD ======================== */
 .pw-toggle {
   position: absolute;
-  right: 12px;
+  right: 11px;
   background: transparent;
   border: none;
   color: #555;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
   padding: 0;
+  transition: color 0.2s;
 }
 
 .pw-toggle:hover {
-  color: var(--gold, #d4a017);
+  color: #d4a017;
 }
 
 .pw-mismatch {
@@ -731,76 +385,104 @@
   align-items: center;
   gap: 6px;
   color: #f87171;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
 }
 
-/* Strength bar */
 .pw-strength-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
+  grid-column: 1 / -1;
 }
 
 .pw-strength-bar {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex: 1;
 }
 
 .pw-bar-seg {
   flex: 1;
-  height: 4px;
+  height: 3px;
   border-radius: 9999px;
   background: rgba(255,255,255,0.08);
   transition: background 0.3s;
 }
 
 .pw-bar-seg.active {
-  background: var(--gold, #d4a017);
+  background: #d4a017;
 }
 
 .pw-strength-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #888;
   white-space: nowrap;
-  min-width: 60px;
+  min-width: 56px;
   text-align: right;
 }
 
-/* Update password button */
 .update-pw-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 1.4rem;
+  gap: 7px;
+  margin-top: 1rem;
   background: transparent;
-  border: 1px solid rgba(212, 160, 23, 0.4);
-  color: var(--gold, #d4a017);
-  border-radius: 10px;
-  padding: 0.65rem 1.4rem;
-  font-size: 0.88rem;
+  border: 1px solid rgba(212,160,23,0.4);
+  color: #d4a017;
+  border-radius: 9px;
+  padding: 0.52rem 1.2rem;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   letter-spacing: 0.5px;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
-.update-pw-btn:hover {
-  background: rgba(212, 160, 23, 0.1);
-  border-color: var(--gold, #d4a017);
+.update-pw-btn:hover:not(:disabled) {
+  background: rgba(212,160,23,0.1);
+  border-color: #d4a017;
 }
 
-/* ==================== RESPONSIVE ==================== */
+.update-pw-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ======================== LOADING ======================== */
+.profile-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: #555;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+}
+
+/* ======================== RESPONSIVE ======================== */
+@media (max-width: 1024px) {
+  .dash-main {
+    margin-left: 0;
+    padding: 5rem 1.6rem 2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
 
   .profile-card {
-    padding: 1.5rem 1.2rem;
+    padding: 1.2rem 1rem;
   }
 
-  .profile-page-header {
+  .dash-header {
     flex-direction: column;
     align-items: flex-start;
   }

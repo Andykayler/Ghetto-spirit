@@ -71,7 +71,7 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -94,9 +94,10 @@ export default function LoginPage() {
   const getErrorMessage = (code: string) => {
     switch (code) {
       case "auth/user-not-found":    return "No account found with this email.";
-      case "auth/wrong-password":    return "Incorrect password.";
+      case "auth/wrong-password":    return "Incorrect password. Check your email for a reset link.";
       case "auth/invalid-email":     return "Invalid email address.";
       case "auth/too-many-requests": return "Too many attempts. Try again later.";
+      case "auth/invalid-credential": return "Invalid credentials. Check your email for a password reset link.";
       default:                       return "Failed to sign in. Please try again.";
     }
   };

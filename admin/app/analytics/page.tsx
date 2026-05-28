@@ -2,14 +2,7 @@
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState, useEffect } from "react";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import "./analytics.css";
 
@@ -30,9 +23,9 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAdvancedAnalytics = async () => {
+    const fetchAnalytics = async () => {
       try {
-        // Artists Data
+        // Artists
         const artistsSnap = await getDocs(collection(db, "artists"));
         let verifiedCount = 0;
         const artistPerformance: any[] = [];
@@ -40,10 +33,9 @@ export default function AnalyticsPage() {
         artistsSnap.forEach((doc) => {
           const data = doc.data();
           if (data.status === "verified") verifiedCount++;
-
           artistPerformance.push({
             name: data.name,
-            streams: data.totalStreams || 0, // You can sum from songs if needed
+            streams: data.totalStreams || 0,
             songs: data.songs || 0,
           });
         });
@@ -51,7 +43,7 @@ export default function AnalyticsPage() {
         setTotalArtists(artistsSnap.size);
         setVerifiedArtists(verifiedCount);
 
-        // Songs Data
+        // Songs
         const songsSnap = await getDocs(collection(db, "songs"));
         let totalStreams = 0;
         let thisMonthCount = 0;
@@ -65,43 +57,43 @@ export default function AnalyticsPage() {
           const streams = data.streams || 0;
           totalStreams += streams;
 
-          // Genre stats
           const genre = data.genre || "Unknown";
-          if (!genreMap.has(genre)) {
-            genreMap.set(genre, { count: 0, streams: 0 });
-          }
+          if (!genreMap.has(genre)) genreMap.set(genre, { count: 0, streams: 0 });
           const g = genreMap.get(genre)!;
           g.count++;
           g.streams += streams;
 
-          // Songs this month
           if (data.createdAt) {
-            const songDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            const songDate = data.createdAt.toDate
+              ? data.createdAt.toDate()
+              : new Date(data.createdAt);
             if (songDate >= firstDayThisMonth) thisMonthCount++;
           }
         });
 
-        const avgStreams = songsSnap.size > 0 ? Math.floor(totalStreams / songsSnap.size) : 0;
-        setAvgStreamsPerSong(avgStreams);
+        setAvgStreamsPerSong(
+          songsSnap.size > 0 ? Math.floor(totalStreams / songsSnap.size) : 0
+        );
         setSongsThisMonth(thisMonthCount);
 
-        // Genre Breakdown with percentages
         const totalSongs = songsSnap.size;
-        const genresArray: GenreStat[] = Array.from(genreMap.entries()).map(([genre, stats]) => ({
-          genre,
-          count: stats.count,
-          streams: stats.streams,
-          percentage: totalSongs > 0 ? Math.round((stats.count / totalSongs) * 100) : 0,
-        })).sort((a, b) => b.streams - a.streams);
+        const genresArray: GenreStat[] = Array.from(genreMap.entries())
+          .map(([genre, stats]) => ({
+            genre,
+            count: stats.count,
+            streams: stats.streams,
+            percentage:
+              totalSongs > 0 ? Math.round((stats.count / totalSongs) * 100) : 0,
+          }))
+          .sort((a, b) => b.streams - a.streams)
+          .slice(0, 8);
 
-        setGenreStats(genresArray.slice(0, 8));
+        setGenreStats(genresArray);
 
-        // Top Performing Artists
         const sortedArtists = artistPerformance
-          .sort((a, b) => (b.streams || 0) - (a.streams || 0))
+          .sort((a, b) => b.streams - a.streams)
           .slice(0, 6);
         setTopPerformingArtists(sortedArtists);
-
       } catch (error) {
         console.error("Analytics error:", error);
       } finally {
@@ -109,7 +101,7 @@ export default function AnalyticsPage() {
       }
     };
 
-    fetchAdvancedAnalytics();
+    fetchAnalytics();
   }, []);
 
   const formatNumber = (num: number) => {
@@ -123,38 +115,45 @@ export default function AnalyticsPage() {
       <Sidebar />
 
       <div className="dashboard-main">
+
+        {/* Header */}
         <div className="page-header">
           <h1>Deep Analytics</h1>
-          <p className="page-subtitle">Platform insights & trends</p>
+          <p className="page-subtitle">Platform insights & performance trends</p>
         </div>
 
-        {/* Advanced Metrics */}
+        {/* Stat Cards */}
         <div className="stats-grid">
           <div className="stat-card">
             <h3>Verified Artists</h3>
-            <p className="stat-number">{loading ? "..." : verifiedArtists}</p>
-            <p className="stat-sub">of {totalArtists} total</p>
+            <p className="stat-number">{loading ? "—" : verifiedArtists}</p>
+            <p className="stat-sub">of {totalArtists} total artists</p>
           </div>
           <div className="stat-card">
             <h3>Avg Streams / Song</h3>
-            <p className="stat-number">{loading ? "..." : formatNumber(avgStreamsPerSong)}</p>
+            <p className="stat-number">
+              {loading ? "—" : formatNumber(avgStreamsPerSong)}
+            </p>
+            <p className="stat-sub">across all songs</p>
           </div>
           <div className="stat-card">
             <h3>Songs This Month</h3>
-            <p className="stat-number">{loading ? "..." : songsThisMonth}</p>
-            <p className="stat-sub">New uploads</p>
+            <p className="stat-number">{loading ? "—" : songsThisMonth}</p>
+            <p className="stat-sub">new uploads</p>
           </div>
         </div>
 
+        {/* Genre + Top Artists — side by side grid */}
         <div className="analytics-grid">
+
           {/* Genre Distribution */}
-          <div className="content-card full-width">
+          <div className="content-card">
             <div className="card-header">
               <h2>Genre Distribution</h2>
             </div>
             <div className="genre-grid">
               {loading ? (
-                <p>Loading genres...</p>
+                <p className="empty-text">Loading genres...</p>
               ) : genreStats.length > 0 ? (
                 genreStats.map((g, i) => (
                   <div key={i} className="genre-bar">
@@ -163,13 +162,18 @@ export default function AnalyticsPage() {
                       <span className="genre-perc">{g.percentage}%</span>
                     </div>
                     <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${g.percentage}%` }}></div>
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${g.percentage}%` }}
+                      />
                     </div>
-                    <p className="genre-streams">{formatNumber(g.streams)} streams</p>
+                    <p className="genre-streams">
+                      {formatNumber(g.streams)} streams
+                    </p>
                   </div>
                 ))
               ) : (
-                <p>No genre data available yet.</p>
+                <p className="empty-text">No genre data available yet.</p>
               )}
             </div>
           </div>
@@ -177,11 +181,11 @@ export default function AnalyticsPage() {
           {/* Top Performing Artists */}
           <div className="content-card">
             <div className="card-header">
-              <h2>Top Performing Artists</h2>
+              <h2>Top Artists</h2>
             </div>
             <div className="list-container">
               {loading ? (
-                <p>Loading...</p>
+                <p className="empty-text">Loading...</p>
               ) : topPerformingArtists.length > 0 ? (
                 topPerformingArtists.map((artist, i) => (
                   <div key={i} className="list-item">
@@ -190,14 +194,15 @@ export default function AnalyticsPage() {
                       <p className="item-title">{artist.name}</p>
                       <p className="item-subtitle">{artist.songs} songs</p>
                     </div>
-                    <p className="streams">{formatNumber(artist.streams)} streams</p>
+                    <p className="streams">{formatNumber(artist.streams)}</p>
                   </div>
                 ))
               ) : (
-                <p>No artist performance data yet.</p>
+                <p className="empty-text">No artist data yet.</p>
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>

@@ -1,47 +1,88 @@
 "use client";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, UserCheck, Ban, Eye, Plus } from "lucide-react";
 import "./users.css";
 import AddUserModal from "./adduser";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "react-hot-toast";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  joined: string;
+  status: string;
+  streams: string | number;
+  profileImage?: string;
+}
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const users = [
-    { id: 1, name: "Thabo Nkosi",    email: "thabo@gmail.com",   role: "Listener", joined: "Jan 2025", status: "active",   streams: "1,245" },
-    { id: 2, name: "Zinhle Mthembu", email: "zinhle@icloud.com", role: "Artist",   joined: "Dec 2024", status: "active",   streams: "892"   },
-    { id: 3, name: "Kgosi Radebe",   email: "kgosi@yahoo.com",   role: "Listener", joined: "Mar 2025", status: "inactive", streams: "324"   },
-    { id: 4, name: "Nomsa Khumalo",  email: "nomsa@gmail.com",   role: "Artist",   joined: "Feb 2025", status: "active",   streams: "2,134" },
-  ];
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const data = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as User[];
+        setUsers(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error(error);
+        toast.error("Failed to load users");
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, []);
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  /* Get initials for the avatar bubble */
   const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "?";
+
+  const handleToggleStatus = async (user: User) => {
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    try {
+      await updateDoc(doc(db, "users", user.id), { status: newStatus });
+      toast.success(`${user.name} marked as ${newStatus}`);
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
 
   return (
     <div className="dashboard-container">
       <Sidebar />
 
       <div className="dashboard-main">
-
-        {/* Header */}
         <div className="page-header">
           <h1>Users Management</h1>
-          <button className="add-user-btn" onClick={() => setIsAddModalOpen(true)}>
+          <button className="add-btn" onClick={() => setIsAddModalOpen(true)}>
             <Plus size={20} />
             Add New User
           </button>
         </div>
 
-        {/* Search */}
         <div className="controls">
           <div className="search-box">
             <Search size={20} />
@@ -54,69 +95,100 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="content-card table-card">
-          <div className="table-wrapper">
-            <table className="users-table">
-              <thead>
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Streams</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Joined</th>
-                  <th>Streams</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+                    Loading users...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
-                      No users found.
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "3rem", color: "#666" }}>
+                    No users found.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <div className="user-info">
+                        {user.profileImage ? (
+                          <img
+                            src={user.profileImage}
+                            alt={user.name}
+                            className="user-avatar-img"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="user-avatar">{getInitials(user.name)}</div>
+                        )}
+                        <span>{user.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ color: "#aaa" }}>{user.email}</td>
+                    <td>
+                      <span className={`role-badge ${user.role?.toLowerCase()}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td style={{ color: "#aaa" }}>{user.joined || "—"}</td>
+                    <td>{user.streams || "0"}</td>
+                    <td>
+                      <span className={`status-badge ${user.status}`}>
+                        {user.status === "active" ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="action-btn" title="View">
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          className="action-btn"
+                          title={user.status === "active" ? "Deactivate" : "Activate"}
+                          onClick={() => handleToggleStatus(user)}
+                        >
+                          <UserCheck size={16} />
+                        </button>
+                        <button
+                          className="action-btn delete"
+                          title="Ban"
+                          onClick={async () => {
+                            try {
+                              await updateDoc(doc(db, "users", user.id), {
+                                status: "banned",
+                              });
+                              toast.success(`${user.name} has been banned`);
+                            } catch {
+                              toast.error("Failed to ban user");
+                            }
+                          }}
+                        >
+                          <Ban size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <div className="user-info">
-                          <div className="user-avatar">{getInitials(user.name)}</div>
-                          <span>{user.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ color: "#aaa" }}>{user.email}</td>
-                      <td>
-                        <span className={`role-badge ${user.role.toLowerCase()}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td style={{ color: "#aaa" }}>{user.joined}</td>
-                      <td>{user.streams}</td>
-                      <td>
-                        <span className={`status-badge ${user.status}`}>
-                          {user.status === "active" ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="action-btn" title="View">
-                            <Eye size={16} />
-                          </button>
-                          <button className="action-btn" title="Approve">
-                            <UserCheck size={16} />
-                          </button>
-                          <button className="action-btn delete" title="Ban">
-                            <Ban size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

@@ -1,133 +1,192 @@
-/* app/analytics/analytics.css */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
 .dashboard-container {
-  min-height: 100vh;
-  background-color: var(--black);
   display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
 }
 
 .dashboard-main {
   flex: 1;
-  margin-left: 280px;
-  padding: 2.2rem 2.8rem;
-  max-width: 1450px;
-  width: 100%;
+  margin-left: 260px;
+  padding: 2.6rem 3rem;
+  width: calc(100% - 260px);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .page-header {
-  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2.8rem;
 }
 
 .page-header h1 {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 3.4rem;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
   color: white;
-  letter-spacing: 1.5px;
+  margin: 0 0 4px;
+  letter-spacing: 1px;
+  line-height: 1;
 }
 
 .page-subtitle {
-  color: #aaa;
-  font-size: 1.12rem;
-  margin-top: 6px;
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 300;
+  margin: 0;
 }
 
-/* Stats */
+/* ── Stat Cards ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.6rem;
-  margin-bottom: 3.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.4rem;
+  margin-bottom: 2.6rem;
 }
 
 .stat-card {
-  background: var(--black-mid);
-  border: 1px solid rgba(212, 160, 23, 0.25);
-  border-radius: 24px;
-  padding: 2rem;
-  transition: all 0.4s;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(212,160,23,0.14);
+  border-radius: 20px;
+  padding: 1.6rem 1.8rem 1.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeUp 0.6s ease both;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  width: 70%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.5), transparent);
 }
 
 .stat-card:hover {
-  transform: translateY(-6px);
-  border-color: var(--gold);
+  border-color: rgba(212,160,23,0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
 .stat-card h3 {
-  color: #bbb;
-  font-size: 0.97rem;
-  margin-bottom: 0.6rem;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 0.8rem;
 }
 
 .stat-number {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.9rem;
-  color: var(--gold);
+  font-size: 2.8rem;
+  color: white;
+  line-height: 1;
+  letter-spacing: 1px;
   margin: 0;
 }
 
 .stat-sub {
-  color: #777;
-  font-size: 0.9rem;
-  margin-top: 8px;
+  color: #555;
+  font-size: 0.85rem;
+  margin: 6px 0 0;
 }
 
-/* Analytics Grid */
+/* ── Analytics Grid ── */
 .analytics-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.8rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
 }
 
-.full-width {
-  grid-column: 1 / -1;
-}
-
+/* ── Content Card ── */
 .content-card {
-  background: var(--black-mid);
-  border: 1px solid rgba(212, 160, 23, 0.25);
-  border-radius: 24px;
-  padding: 2.2rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(212,160,23,0.13);
+  border-radius: 20px;
+  padding: 1.8rem 2rem;
+  position: relative;
+  animation: fadeUp 0.6s 0.1s ease both;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
-.content-card h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.2rem;
-  color: white;
+.content-card:hover {
+  border-color: rgba(212,160,23,0.28);
+}
+
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,160,23,0.35), transparent);
+}
+
+.card-header {
   margin-bottom: 1.6rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212,160,23,0.08);
 }
 
-/* Genre Bars */
+.card-header h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* ── Genre Bars ── */
 .genre-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: 1.1rem;
 }
 
 .genre-bar {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 14px 18px;
-  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(212,160,23,0.08);
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: border-color 0.3s;
+}
+
+.genre-bar:hover {
+  border-color: rgba(212,160,23,0.2);
 }
 
 .genre-info {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
 }
 
 .genre-name {
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: white;
 }
 
 .genre-perc {
-  color: var(--gold);
-  font-weight: 700;
+  color: #d4a017;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .progress-bar {
-  height: 6px;
-  background: rgba(212, 160, 23, 0.15);
+  height: 5px;
+  background: rgba(212,160,23,0.1);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 6px;
@@ -135,58 +194,103 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--gold), #f0c040);
+  background: linear-gradient(90deg, #d4a017, #f0c040);
   border-radius: 999px;
+  transition: width 0.8s ease;
 }
 
 .genre-streams {
-  color: #888;
-  font-size: 0.9rem;
+  color: #555;
+  font-size: 0.82rem;
   text-align: right;
+  margin: 0;
 }
 
-/* List Items */
-.list-container .list-item {
+/* ── Top Artists List ── */
+.list-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-item {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(212, 160, 23, 0.1);
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(212,160,23,0.07);
+  transition: background 0.2s;
 }
 
-.list-container .list-item:last-child {
+.list-item:last-child {
   border-bottom: none;
 }
 
 .rank {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--gold);
-  width: 34px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  color: #d4a017;
+  width: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .item-title {
   color: white;
-  font-weight: 600;
+  font-size: 0.93rem;
+  font-weight: 500;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-subtitle {
-  color: #888;
-  font-size: 0.9rem;
+  color: #555;
+  font-size: 0.82rem;
+  margin: 0;
 }
 
 .streams {
-  color: var(--gold);
+  color: #d4a017;
+  font-size: 0.88rem;
   font-weight: 600;
-  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Responsive */
+.empty-text {
+  color: #555;
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
 @media (max-width: 1024px) {
-  .dashboard-main { margin-left: 0; padding: 2rem 1.8rem; }
-  .analytics-grid { grid-template-columns: 1fr; }
+  .dashboard-main {
+    margin-left: 0;
+    padding: 5rem 1.8rem 2rem;
+    width: 100%;
+  }
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 480px) {
-  .page-header h1 { font-size: 2.6rem; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .dashboard-main { padding: 5rem 1rem 2rem; }
 }
