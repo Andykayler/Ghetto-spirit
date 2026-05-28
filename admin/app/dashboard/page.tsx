@@ -1,4 +1,3 @@
-
 "use client";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -6,6 +5,8 @@ import { useState, useEffect } from "react";
 import {
   collection,
   getDocs,
+  doc,
+  getDoc,
   query,
   orderBy,
   limit,
@@ -17,22 +18,23 @@ import {
   Users, Music, Play, Download,
   TrendingUp, Clock, ChevronRight, BarChart2
 } from "lucide-react";
+import { getPlatformTotals } from "./streams";
+import { getTopStreamedSongs } from "./songstreams";
 import "./style.css";
 
 interface Song {
   id: string;
   title: string;
   artist: string;
-  streams: number;
-  downloads?: number;
+  streams: number;   // always sourced from tracks/{id}
   createdAt?: any;
 }
 
 export default function Dashboard() {
   const [totalArtists,   setTotalArtists]   = useState(0);
   const [totalSongs,     setTotalSongs]     = useState(0);
-  const [totalStreams,   setTotalStreams]    = useState(0);
-  const [totalDownloads, setTotalDownloads] = useState(0);
+  const [totalStreams,   setTotalStreams]    = useState(0);   // sourced from `tracks`
+  const [totalDownloads, setTotalDownloads] = useState(0);   // sourced from `tracks`
   const [mostStreamed,   setMostStreamed]   = useState<Song[]>([]);
   const [recentUploads,  setRecentUploads]  = useState<Song[]>([]);
   const [loading,        setLoading]        = useState(true);
@@ -48,36 +50,50 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // ── Artists & Songs counts (from their own collections) ──
         const artistsCount = await getCountFromServer(collection(db, "artists"));
         setTotalArtists(artistsCount.data().count);
 
         const songsSnapshot = await getDocs(collection(db, "songs"));
-        let songsCount = 0, streamsSum = 0, downloadsSum = 0;
-        songsSnapshot.forEach((doc) => {
-          const d = doc.data();
-          songsCount++;
-          streamsSum   += d.streams   || 0;
-          downloadsSum += d.downloads || 0;
-        });
-        setTotalSongs(songsCount);
-        setTotalStreams(streamsSum);
-        setTotalDownloads(downloadsSum);
+        setTotalSongs(songsSnapshot.size);
 
-        const mostStreamedSnap = await getDocs(
-          query(collection(db, "songs"), orderBy("streams", "desc"), limit(5))
+        // ── Streams & Downloads (from `tracks` — where the service writes them) ──
+        const { totalStreams, totalDownloads } = await getPlatformTotals();
+        setTotalStreams(totalStreams);
+        setTotalDownloads(totalDownloads);
+
+        // ── Most streamed songs ──
+        // Step 1: get top song IDs + stream counts from `tracks` (authoritative source)
+        const topStats = await getTopStreamedSongs(5);
+        // Step 2: fetch song metadata (title, artist) from `songs` using those IDs
+        const topSongs = await Promise.all(
+          topStats.map(async ({ songId, streams }) => {
+            const songSnap = await getDoc(doc(db, "songs", songId));
+            const meta = songSnap.exists() ? songSnap.data() : {};
+            return {
+              id:     songId,
+              title:  meta.title  ?? "Unknown Title",
+              artist: meta.artist ?? "Unknown Artist",
+              streams,
+            } as Song;
+          })
         );
-        setMostStreamed(mostStreamedSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Song[]);
+        setMostStreamed(topSongs);
 
+        // ── Recent uploads (metadata from `songs`) ──
         const recentSnap = await getDocs(
           query(collection(db, "songs"), orderBy("createdAt", "desc"), limit(5))
         );
-        setRecentUploads(recentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Song[]);
+        setRecentUploads(
+          recentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Song[]
+        );
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchDashboardData();
   }, []);
 
