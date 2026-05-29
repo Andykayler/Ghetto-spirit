@@ -11,7 +11,8 @@ export function ArtistsHero() {
         background: "#0A0A0A",
         display: "flex",
         alignItems: "center",
-        padding: "48px 60px 36px",
+        padding: "28px 60px 24px",                      // ← tighter padding
+        borderBottom: "1px solid rgba(212,175,55,0.4)", // ← gold bottom border
       }}
     >
       {/* BACKGROUND */}
@@ -50,7 +51,7 @@ export function ArtistsHero() {
           width: "100%",
           display: "grid",
           gridTemplateColumns: "1.2fr 1px 0.8fr 0.8fr",
-          gap: "36px",
+          gap: "28px",                                  // ← tighter gap
           alignItems: "center",
         }}
       >
@@ -59,11 +60,11 @@ export function ArtistsHero() {
           <p
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "12px",
+              fontSize: "11px",                         // ← smaller
               fontWeight: 600,
               letterSpacing: "0.12em",
               color: "#888",
-              marginBottom: "16px",
+              marginBottom: "10px",                     // ← tighter
               textTransform: "uppercase",
             }}
           >
@@ -73,8 +74,8 @@ export function ArtistsHero() {
           <h1
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: "clamp(3rem, 6vw, 5.5rem)",
-              lineHeight: 0.92,
+              fontSize: "clamp(2rem, 4vw, 3.2rem)",     // ← much smaller
+              lineHeight: 0.95,
               margin: 0,
               color: "#fff",
               letterSpacing: "0.03em",
@@ -87,10 +88,10 @@ export function ArtistsHero() {
 
           <div
             style={{
-              width: "72px",
-              height: "3px",
+              width: "48px",                            // ← smaller bar
+              height: "2px",
               background: "#D4AF37",
-              margin: "20px 0",
+              margin: "12px 0",                         // ← tighter
             }}
           />
 
@@ -98,9 +99,9 @@ export function ArtistsHero() {
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
               color: "#D4AF37",
-              fontSize: "13px",
+              fontSize: "11px",                         // ← smaller
               fontWeight: 600,
-              letterSpacing: "0.2em",
+              letterSpacing: "0.18em",
               fontStyle: "italic",
               textTransform: "uppercase",
               margin: 0,
@@ -114,7 +115,7 @@ export function ArtistsHero() {
         <div
           style={{
             width: "1px",
-            height: "120px",
+            height: "80px",                             // ← shorter
             background:
               "linear-gradient(to bottom, transparent, #D4AF37, transparent)",
             opacity: 0.6,
@@ -127,9 +128,9 @@ export function ArtistsHero() {
             style={{
               fontFamily: "'Barlow', sans-serif",
               color: "#c5c5c5",
-              fontSize: "14px",
-              lineHeight: 1.85,
-              maxWidth: "340px",
+              fontSize: "13px",                         // ← smaller
+              lineHeight: 1.75,
+              maxWidth: "300px",                        // ← tighter
               margin: 0,
             }}
           >
@@ -160,7 +161,7 @@ export function ArtistsHero() {
           bottom: 0,
           left: 0,
           right: 0,
-          height: "50px",
+          height: "36px",                               // ← shorter fade
           background: "linear-gradient(to top, #0A0A0A 0%, transparent 100%)",
           zIndex: 1,
         }}
@@ -174,33 +175,31 @@ export function ArtistsHero() {
 
         @media (max-width: 980px) {
           section {
-            padding: 36px 24px 28px !important;
+            padding: 20px 24px 18px !important;
           }
 
           .hero-grid {
             grid-template-columns: 1fr !important;
-            gap: 20px !important;
+            gap: 16px !important;
           }
 
-          /* hide divider and crown on tablet/mobile */
           .hero-grid > div:nth-child(2),
           .hero-grid > div:nth-child(4) {
             display: none !important;
           }
 
-          /* center text col takes full width */
           .hero-grid > div:nth-child(3) {
             grid-column: 1 !important;
           }
 
           h1 {
-            font-size: 3rem !important;
+            font-size: 2.2rem !important;
           }
         }
 
         @media (max-width: 640px) {
           h1 {
-            font-size: 2.6rem !important;
+            font-size: 1.9rem !important;
           }
         }
       `}</style>

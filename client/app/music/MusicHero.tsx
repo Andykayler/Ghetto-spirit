@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-// ─── MusicHero ────────────────────────────────────────────────────────────────
 export function MusicHero() {
   const headRef = useRef<HTMLDivElement>(null);
 
@@ -23,14 +22,25 @@ export function MusicHero() {
       style={{
         position: "relative",
         width: "100%",
-        minHeight: 520,
         display: "flex",
         alignItems: "center",
         overflow: "hidden",
         background: "#0A0A0A",
+        padding: "28px 60px 24px",        // ← tighter padding
+        borderBottom: "1px solid rgba(212,175,55,0.4)", // ← gold bottom border
       }}
     >
-      {/* Background – two artists image */}
+      <style>{`
+        @media (max-width: 980px) {
+          .music-hero-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .music-hero-divider,
+          .music-hero-body,
+          .music-hero-cta { display: none !important; }
+          .music-hero-section { padding: 20px 24px 18px !important; }
+        }
+      `}</style>
+
+      {/* Background */}
       <div
         style={{
           position: "absolute",
@@ -42,178 +52,191 @@ export function MusicHero() {
         }}
       />
 
-      {/* Dark left vignette */}
+      {/* Gold radial glow */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to right, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.55) 45%, rgba(10,10,10,0.1) 100%)",
+            "radial-gradient(ellipse 70% 60% at 60% 50%, rgba(212,175,55,0.13) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
 
-      {/* Gold haze */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(ellipse 60% 70% at 65% 50%, rgba(212,175,55,0.13) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Crown watermark – top right */}
+      {/* Crown watermark */}
       <div
         style={{
           position: "absolute",
           right: 48,
-          top: 40,
+          top: 24,
           zIndex: 2,
-          opacity: 0.55,
+          opacity: 0.45,
         }}
       >
         <CrownWatermark />
       </div>
 
-      {/* Left content */}
+      {/* Grid */}
       <div
         ref={headRef}
+        className="music-hero-grid"
         style={{
           position: "relative",
           zIndex: 3,
-          padding: "64px 60px",
-          maxWidth: 580,
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1px 0.8fr 0.8fr",
+          gap: "28px",                    // ← tighter gap
+          alignItems: "center",
         }}
       >
-        {/* Eyebrow */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-          <span
+        {/* LEFT: headline */}
+        <div>
+          <p style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 600,
+            fontSize: 11,
+            letterSpacing: "0.12em",
+            color: "#888",
+            marginBottom: 10,             // ← tighter
+            textTransform: "uppercase",
+          }}>
+            HOME / <span style={{ color: "#D4AF37" }}>MUSIC &amp; VIDEOS</span>
+          </p>
+
+          <h1 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: "clamp(2rem, 4vw, 3.2rem)", // ← much smaller
+            lineHeight: 0.95,
+            color: "#FFFFFF",
+            margin: 0,
+            letterSpacing: "0.02em",
+          }}>
+            RAW SOUNDS.
+            <br />
+            <span style={{ color: "#D4AF37" }}>REAL STORIES.</span>
+          </h1>
+
+          <div style={{ width: 48, height: 2, background: "#D4AF37", margin: "12px 0" }} /> {/* ← smaller bar */}
+
+          <p style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            color: "#D4AF37",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            fontStyle: "italic",
+            textTransform: "uppercase",
+            margin: 0,
+          }}>
+            LATEST MUSIC. OFFICIAL VIDEOS. FREESTYLES.
+          </p>
+        </div>
+
+        {/* DIVIDER */}
+        <div className="music-hero-divider" style={{
+          width: 1,
+          height: 80,                     // ← shorter
+          background: "linear-gradient(to bottom, transparent, #D4AF37, transparent)",
+          opacity: 0.6,
+        }} />
+
+        {/* CENTER: body copy */}
+        <div className="music-hero-body">
+          <p style={{
+            fontFamily: "'Barlow', sans-serif",
+            color: "#c5c5c5",
+            fontSize: 13,
+            lineHeight: 1.75,
+            maxWidth: 300,
+            margin: 0,
+          }}>
+            Explore the latest music, official videos, freestyles, and
+            behind-the-scenes content from our artists.
+          </p>
+        </div>
+
+        {/* RIGHT: CTAs */}
+        <div className="music-hero-cta" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          <a
+            href="#featured"
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 22px",       // ← smaller buttons
+              background: "#D4AF37",
+              border: "none",
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: 12,
-              letterSpacing: "0.24em",
-              color: "#D4AF37",
+              letterSpacing: "0.16em",
+              color: "#0A0A0A",
+              textDecoration: "none",
               textTransform: "uppercase",
+              transition: "background 0.25s",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.background = "#F0CB50";
+            }}
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.background = "#D4AF37";
             }}
           >
-            MUSIC &amp; VIDEOS
-          </span>
-          <div style={{ width: 44, height: 1, background: "#D4AF37" }} />
-        </div>
-
-        {/* Main headline */}
-        <h1
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "clamp(60px, 8vw, 100px)",
-            lineHeight: 0.92,
-            margin: "0 0 6px 0",
-            letterSpacing: "0.02em",
-          }}
-        >
-          <span style={{ color: "#FFFFFF" }}>RAW SOUNDS.</span>
-          <br />
-          <span style={{ color: "#D4AF37" }}>REAL STORIES.</span>
-        </h1>
-
-        {/* Sub */}
-        <p
-          style={{
-            fontFamily: "'Barlow', sans-serif",
-            fontSize: 14,
-            lineHeight: 1.72,
-            color: "rgba(255,255,255,0.65)",
-            margin: "22px 0 36px",
-            maxWidth: 360,
-          }}
-        >
-          Explore the latest music, official videos, freestyles, and
-          behind-the-scenes content from our artists.
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-          <HeroButton
-            label="LATEST RELEASES →"
-            variant="gold"
+            LATEST RELEASES →
+          </a>
+          <a
             href="#featured"
-          />
-          <HeroButton label="BROWSE ALL" variant="outline" href="#featured" />
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 22px",
+              background: "transparent",
+              border: "1.5px solid rgba(255,255,255,0.4)",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: "0.16em",
+              color: "#FFFFFF",
+              textDecoration: "none",
+              textTransform: "uppercase",
+              transition: "all 0.25s",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.borderColor = "#D4AF37";
+              e.currentTarget.style.color = "#D4AF37";
+            }}
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)";
+              e.currentTarget.style.color = "#FFFFFF";
+            }}
+          >
+            BROWSE ALL
+          </a>
         </div>
       </div>
+
+      {/* Bottom fade — sits just above the border */}
+      <div style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 36,
+        background: "linear-gradient(to top, #0A0A0A 0%, transparent 100%)",
+        zIndex: 1,
+      }} />
     </section>
   );
 }
 
-// ─── HeroButton ───────────────────────────────────────────────────────────────
-function HeroButton({
-  label,
-  variant,
-  href,
-}: {
-  label: string;
-  variant: "gold" | "outline";
-  href: string;
-}) {
-  const isGold = variant === "gold";
-  return (
-    <a
-      href={href}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "14px 28px",
-        background: isGold ? "#D4AF37" : "transparent",
-        border: isGold ? "none" : "1.5px solid rgba(255,255,255,0.5)",
-        fontFamily: "'Barlow Condensed', sans-serif",
-        fontWeight: 700,
-        fontSize: 13,
-        letterSpacing: "0.16em",
-        color: isGold ? "#0A0A0A" : "#FFFFFF",
-        textDecoration: "none",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        transition: "all 0.25s",
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement;
-        if (isGold) {
-          el.style.background = "#F0CB50";
-        } else {
-          el.style.borderColor = "#D4AF37";
-          el.style.color = "#D4AF37";
-        }
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement;
-        if (isGold) {
-          el.style.background = "#D4AF37";
-        } else {
-          el.style.borderColor = "rgba(255,255,255,0.5)";
-          el.style.color = "#FFFFFF";
-        }
-      }}
-    >
-      {label}
-    </a>
-  );
-}
-
-// ─── Crown Watermark (SVG) ───────────────────────────────────────────────────
+// ─── Crown Watermark ──────────────────────────────────────────────────────────
 function CrownWatermark() {
   return (
-    <svg
-      width={160}
-      height={130}
-      viewBox="0 0 160 130"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Crown shape */}
+    <svg width={100} height={82} viewBox="0 0 160 130" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M20 110 L10 35 L50 65 L80 10 L110 65 L150 35 L140 110 Z"
         fill="none"
@@ -221,24 +244,12 @@ function CrownWatermark() {
         strokeWidth="4"
         strokeLinejoin="round"
       />
-      {/* Drip lines */}
       <line x1="35" y1="110" x2="35" y2="125" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
       <line x1="60" y1="110" x2="60" y2="122" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
       <line x1="80" y1="110" x2="80" y2="128" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
       <line x1="100" y1="110" x2="100" y2="120" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
       <line x1="125" y1="110" x2="125" y2="124" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
-      {/* GS in center */}
-      <text
-        x="80"
-        y="90"
-        textAnchor="middle"
-        fill="#D4AF37"
-        fontSize="22"
-        fontWeight="bold"
-        fontFamily="serif"
-      >
-        GS
-      </text>
+      <text x="80" y="90" textAnchor="middle" fill="#D4AF37" fontSize="22" fontWeight="bold" fontFamily="serif">GS</text>
     </svg>
   );
 }

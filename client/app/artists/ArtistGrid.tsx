@@ -71,19 +71,20 @@ export function ArtistGrid({
   return (
     <>
       <style>{`
+        /* Bumped up from 6 → 8 columns to make individual cards smaller */
         .artist-grid {
           display: grid;
-          grid-template-columns: repeat(6, 1fr);
+          grid-template-columns: repeat(8, 1fr);
           gap: 3px;
         }
         @media (max-width: 1280px) {
-          .artist-grid { grid-template-columns: repeat(4, 1fr); }
+          .artist-grid { grid-template-columns: repeat(6, 1fr); }
         }
         @media (max-width: 900px) {
-          .artist-grid { grid-template-columns: repeat(3, 1fr); }
+          .artist-grid { grid-template-columns: repeat(4, 1fr); }
         }
         @media (max-width: 600px) {
-          .artist-grid { grid-template-columns: repeat(2, 1fr); }
+          .artist-grid { grid-template-columns: repeat(3, 1fr); }
           .artist-grid-wrap { padding-left: 16px !important; padding-right: 16px !important; }
         }
         @media (max-width: 1280px) and (min-width: 601px) {
