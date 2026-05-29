@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import { ContactFooter } from "@/components/ContactFooter";
 
 import { Category, ARTISTS, CATEGORIES, GENRES } from "./types";
 import { ArtistsHero } from "./ArtistsHero";
@@ -53,13 +54,15 @@ export default function ArtistsPage() {
         />
 
         <section className="px-10 py-10" style={{ background: "#0A0A0A", flex: 1 }}>
-<ArtistGrid
-  searchQuery={searchQuery}
-  selectedGenre={selectedGenre}
-  activeCategory={activeCategory}
-/>        </section>
+          <ArtistGrid
+            searchQuery={searchQuery}
+            selectedGenre={selectedGenre}
+            activeCategory={activeCategory}
+          />
+        </section>
 
-        <JoinCTA />
+       
+        <ContactFooter />
 
       </main>
     </>

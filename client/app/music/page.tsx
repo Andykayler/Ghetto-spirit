@@ -6,6 +6,7 @@ import { PlayerProvider } from "./PlayerContext";
 import { MusicHero } from "./MusicHero";
 import { FeaturedSongs } from "./FeaturedVideos";
 import { ExpandedPlayer } from "./ExpandedPlayer";
+import { ContactFooter } from "../../components/ContactFooter";
 
 // Prevents ANY server-side rendering of the player bar
 const MusicPlayerBar = dynamic(() => import("../../components/MusicPlayerBar"), {
@@ -33,6 +34,7 @@ export default function MusicVideosPage() {
           <FeaturedSongs />
           <MusicPlayerBar />
           <ExpandedPlayer />
+          <ContactFooter />
         </main>
       </PlayerProvider>
     </>

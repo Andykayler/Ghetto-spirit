@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { usePlayer, parseDuration, formatTime } from "./PlayerContext";
+import { usePlayer, formatTime } from "./PlayerContext";
 import type { Track } from "./PlayerContext";
-
 import {
   recordStream,
   toggleLikeInDb,
@@ -18,29 +17,13 @@ import {
   type CommentReply,
   type TrackStats,
 } from "./Expandedplayerservice";
+import "./ExpandedPlayer.css";
 
 export function ExpandedPlayer() {
   const {
-    currentTrack,
-    playing,
-    progress,
-    volume,
-    shuffle,
-    repeat,
-    expanded,
-    togglePlay,
-    seek,
-    next,
-    prev,
-    setVolume,
-    toggleShuffle,
-    cycleRepeat,
-    setExpanded,
-    play,
-    artistTrackCount,
-    artistTracks,
-    queueIndex,
-    queue,
+    currentTrack, playing, progress, volume, shuffle, repeat, expanded,
+    togglePlay, seek, next, prev, setVolume, toggleShuffle, cycleRepeat,
+    setExpanded, play, artistTrackCount, artistTracks, queueIndex, queue,
   } = usePlayer();
 
   const [activeTab, setActiveTab] = useState<"queue" | "artist" | "comments">("queue");
@@ -76,10 +59,7 @@ export function ExpandedPlayer() {
     setReplyVotes({});
     const unsubStats = subscribeToTrackStats(currentTrack.id, setStats);
     const unsubComments = subscribeToComments(currentTrack.id, setComments);
-    return () => {
-      unsubStats();
-      unsubComments();
-    };
+    return () => { unsubStats(); unsubComments(); };
   }, [currentTrack?.id]);
 
   const lastStreamedId = useRef<string | null>(null);
@@ -92,8 +72,7 @@ export function ExpandedPlayer() {
 
   const handleToggleLike = useCallback(async () => {
     if (!currentTrack) return;
-    const next = await toggleLikeInDb(currentTrack.id, isLiked);
-    setIsLiked(next);
+    setIsLiked(await toggleLikeInDb(currentTrack.id, isLiked));
   }, [currentTrack, isLiked]);
 
   const handleAddComment = useCallback(async () => {
@@ -104,8 +83,7 @@ export function ExpandedPlayer() {
 
   const handleVoteComment = useCallback(async (commentId: string, vote: "like" | "dislike") => {
     if (!currentTrack) return;
-    const prev = commentVotes[commentId];
-    const resolved = await voteCommentInDb(currentTrack.id, commentId, prev, vote);
+    const resolved = await voteCommentInDb(currentTrack.id, commentId, commentVotes[commentId], vote);
     setCommentVotes(v => ({ ...v, [commentId]: resolved }));
   }, [currentTrack, commentVotes]);
 
@@ -114,15 +92,10 @@ export function ExpandedPlayer() {
     await addReplyToDb(currentTrack.id, commentId, author, text);
   }, [currentTrack]);
 
-  const handleVoteReply = useCallback(async (
-    commentId: string,
-    replyId: string,
-    vote: "like" | "dislike"
-  ) => {
+  const handleVoteReply = useCallback(async (commentId: string, replyId: string, vote: "like" | "dislike") => {
     if (!currentTrack) return;
     const key = `${commentId}::${replyId}`;
-    const prev = replyVotes[key];
-    const resolved = await voteReplyInDb(currentTrack.id, commentId, replyId, prev, vote);
+    const resolved = await voteReplyInDb(currentTrack.id, commentId, replyId, replyVotes[key], vote);
     setReplyVotes(v => ({ ...v, [key]: resolved }));
   }, [currentTrack, replyVotes]);
 
@@ -137,8 +110,7 @@ export function ExpandedPlayer() {
     setDownloading(true);
     setDownloadError(null);
     try {
-      const filename = `${currentTrack.artist} - ${currentTrack.title}.mp3`;
-      await downloadTrack(audioUrl, filename, currentTrack.id);
+      await downloadTrack(audioUrl, `${currentTrack.artist} - ${currentTrack.title}.mp3`, currentTrack.id);
     } catch (err: any) {
       setDownloadError(err?.message || "Download failed.");
       setTimeout(() => setDownloadError(null), 4000);
@@ -152,18 +124,14 @@ export function ExpandedPlayer() {
   const totalSec = (() => {
     const d = currentTrack.duration;
     if (!d || d === "--:--") return 0;
-    // Handle "m:ss" or "mm:ss" or plain seconds number
     if (typeof d === "number") return d;
     const parts = String(d).split(":").map(Number);
-    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      return parts[0] * 60 + parts[1];
-    }
-    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return parts[0] * 60 + parts[1];
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) return parts[0] * 3600 + parts[1] * 60 + parts[2];
     const n = parseFloat(String(d));
     return isNaN(n) ? 0 : n;
   })();
+
   const currentSec = Math.floor((progress / 100) * totalSec);
   const artistCount = artistTrackCount(currentTrack.artist);
   const artistSongs = artistTracks(currentTrack.artist);
@@ -173,250 +141,125 @@ export function ExpandedPlayer() {
   const enrichedComments: Comment[] = comments.map(c => ({
     ...c,
     userVote: commentVotes[c.id],
-    replies: c.replies.map(r => ({
-      ...r,
-      userVote: replyVotes[`${c.id}::${r.id}`],
-    })),
+    replies: c.replies.map(r => ({ ...r, userVote: replyVotes[`${c.id}::${r.id}`] })),
   }));
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    seek(((e.clientX - rect.left) / rect.width) * 100);
+  };
 
   return (
     <>
-      <div
-        onClick={() => setExpanded(false)}
-        style={{
-          position: "fixed", inset: 0, zIndex: 90,
-          background: "rgba(0,0,0,0.72)",
-          backdropFilter: "blur(6px)",
-          animation: "fadeIn 0.25s ease",
-        }}
-      />
+      <div className="ep-overlay" onClick={() => setExpanded(false)} />
 
-      <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-        height: "82vh",
-        background: "#0E0E0E",
-        borderTop: "1px solid rgba(212,175,55,0.3)",
-        display: "flex",
-        flexDirection: "column",
-        animation: "slideUp 0.35s cubic-bezier(0.22,1,0.36,1)",
-      }}>
-        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
-          <div
-            style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.2)", cursor: "pointer" }}
-            onClick={() => setExpanded(false)}
-            title="Close player"
-          />
+      <div className="ep-panel">
+        <div className="ep-drag-bar-wrap">
+          <div className="ep-drag-bar" onClick={() => setExpanded(false)} title="Close player" />
         </div>
 
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 380px", overflow: "hidden" }}>
+        <div className="ep-body">
 
-          <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-
-            <div style={{ position: "relative", width: "100%", maxWidth: 300, aspectRatio: "1", margin: "0 auto" }}>
+          {/* ── LEFT: Cover + Controls ── */}
+          <div className="ep-left">
+            <div className="ep-cover-wrap">
               <img
                 src={coverSrc}
                 alt={currentTrack.title}
-                style={{
-                  width: "100%", height: "100%", objectFit: "cover",
-                  border: "2px solid rgba(212,175,55,0.4)",
-                  display: "block",
-                  boxShadow: playing ? "0 0 40px rgba(212,175,55,0.25)" : "none",
-                  transform: playing ? "scale(1.02)" : "scale(1)",
-                  transition: "transform 0.5s ease, box-shadow 0.5s ease",
-                }}
+                className={`ep-cover${playing ? " playing" : ""}`}
               />
-              {playing && (
-                <div style={{
-                  position: "absolute", inset: -6,
-                  border: "1px solid rgba(212,175,55,0.3)",
-                  animation: "pulseRing 2s ease infinite",
-                  pointerEvents: "none",
-                }} />
-              )}
+              {playing && <div className="ep-pulse-ring" />}
             </div>
 
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                  <div style={{
-                    fontFamily: "'Bebas Neue', sans-serif",
-                    fontSize: 24, color: "#FFFFFF", letterSpacing: "0.05em", lineHeight: 1.1,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {currentTrack.title}
-                  </div>
-                  <div style={{
-                    fontFamily: "'Barlow', sans-serif", fontSize: 14,
-                    color: "rgba(255,255,255,0.55)", marginTop: 4,
-                  }}>
+              <div className="ep-track-row">
+                <div className="ep-track-text">
+                  <div className="ep-track-title">{currentTrack.title}</div>
+                  <div className="ep-track-artist">
                     {currentTrack.artist}
                     {artistCount > 0 && (
-                      <span style={{ color: "rgba(212,175,55,0.7)", marginLeft: 8, fontSize: 12 }}>
+                      <span className="ep-track-count">
                         • {artistCount} track{artistCount !== 1 ? "s" : ""}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <div className="ep-action-btns">
                   <button
+                    className={`ep-icon-btn${isLiked ? " liked" : ""}`}
                     onClick={handleToggleLike}
                     title={isLiked ? "Unlike" : "Like"}
-                    style={{
-                      background: isLiked ? "rgba(212,175,55,0.15)" : "none",
-                      border: isLiked ? "1px solid rgba(212,175,55,0.5)" : "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      color: isLiked ? "#D4AF37" : "rgba(255,255,255,0.4)",
-                      fontSize: 20,
-                      padding: "4px 8px",
-                      transition: "all 0.2s",
-                      transform: isLiked ? "scale(1.15)" : "scale(1)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                    onMouseEnter={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
-                    onMouseLeave={e => { if (!isLiked) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
                   >
                     {isLiked ? "♥" : "♡"}
                   </button>
-
                   <button
+                    className={`ep-icon-btn${downloading ? " downloading" : ""}`}
                     onClick={handleDownload}
                     disabled={downloading}
                     title={downloading ? "Downloading…" : "Download track"}
-                    style={{
-                      background: downloading ? "rgba(212,175,55,0.1)" : "none",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: 6,
-                      cursor: downloading ? "default" : "pointer",
-                      color: downloading ? "#D4AF37" : "rgba(255,255,255,0.4)",
-                      fontSize: 16,
-                      padding: "4px 8px",
-                      transition: "all 0.2s",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                    onMouseEnter={e => { if (!downloading) (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; }}
-                    onMouseLeave={e => { if (!downloading) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; }}
                   >
                     {downloading ? "⏳" : "⬇"}
                   </button>
                 </div>
               </div>
 
-              {downloadError && (
-                <div style={{
-                  fontFamily: "'Barlow', sans-serif", fontSize: 11,
-                  color: "#f87171", background: "rgba(248,113,113,0.08)",
-                  border: "1px solid rgba(248,113,113,0.25)",
-                  borderRadius: 4, padding: "5px 10px", marginTop: 6,
-                }}>
-                  {downloadError}
-                </div>
-              )}
+              {downloadError && <div className="ep-download-error">{downloadError}</div>}
 
               {(currentTrack.genre || currentTrack.category) && (
-                <span style={{
-                  fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-                  fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-                  color: "#D4AF37", border: "1px solid rgba(212,175,55,0.35)",
-                  padding: "3px 8px", display: "inline-block", marginTop: 6,
-                }}>
-                  {currentTrack.genre || currentTrack.category}
-                </span>
+                <span className="ep-genre-tag">{currentTrack.genre || currentTrack.category}</span>
               )}
 
-              <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+              <div className="ep-stats-row">
                 <StatBadge value={stats.streams} label="Plays" />
-                <StatBadge value={stats.likes} label="Likes" gold={stats.likes > 0} />
+                <StatBadge value={stats.likes} label="Likes" />
                 <StatBadge value={stats.downloads} label="Downloads" />
                 <StatBadge value={stats.commentCount} label="Comments" />
               </div>
             </div>
 
-            <div
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                seek(((e.clientX - rect.left) / rect.width) * 100);
-              }}
-              style={{ display: "flex", alignItems: "center", gap: 2, height: 52, cursor: "pointer" }}
-            >
-              {waveHeights.map((h, i) => {
-                const barPct = (i / waveHeights.length) * 100;
-                const isPast = barPct <= progress;
-                return (
-                  <div key={i} style={{
-                    flex: 1, height: `${h}px`, maxHeight: 48, minHeight: 3,
-                    background: isPast ? "#D4AF37" : "rgba(212,175,55,0.18)",
-                    borderRadius: 2,
+            {/* Waveform */}
+            <div className="ep-waveform" onClick={handleSeek}>
+              {waveHeights.map((h, i) => (
+                <div
+                  key={i}
+                  className="ep-wave-bar"
+                  style={{
+                    height: `${h}px`,
+                    background: (i / waveHeights.length) * 100 <= progress
+                      ? "#D4AF37"
+                      : "rgba(212,175,55,0.18)",
                     transition: playing ? "height 0.08s ease" : "none",
-                  }} />
-                );
-              })}
+                  }}
+                />
+              ))}
             </div>
 
+            {/* Progress bar */}
             <div>
-              <div
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  seek(((e.clientX - rect.left) / rect.width) * 100);
-                }}
-                style={{
-                  height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2,
-                  cursor: "pointer", position: "relative", marginBottom: 8,
-                }}
-              >
-                <div style={{
-                  position: "absolute", left: 0, top: 0, height: "100%",
-                  width: `${progress}%`, background: "#D4AF37", borderRadius: 2,
-                  transition: playing ? "width 0.1s linear" : "none",
-                }} />
-                <div style={{
-                  position: "absolute", top: "50%", left: `${progress}%`,
-                  transform: "translate(-50%, -50%)",
-                  width: 12, height: 12, borderRadius: "50%", background: "#D4AF37",
-                  border: "2px solid #0E0E0E",
-                }} />
+              <div className="ep-progress-wrap" onClick={handleSeek}>
+                <div
+                  className="ep-progress-fill"
+                  style={{
+                    width: `${progress}%`,
+                    transition: playing ? "width 0.1s linear" : "none",
+                  }}
+                />
+                <div className="ep-progress-thumb" style={{ left: `${progress}%` }} />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.06em" }}>
-                  {formatTime(currentSec)}
-                </span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.06em" }}>
+              <div className="ep-time-row">
+                <span className="ep-time">{formatTime(currentSec)}</span>
+                <span className="ep-time">
                   {totalSec > 0 ? formatTime(totalSec) : (currentTrack.duration || "--:--")}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
-              <ControlBtn active={shuffle} onClick={toggleShuffle} title="Shuffle">
-                <ShuffleIcon />
-              </ControlBtn>
-              <ControlBtn onClick={prev} title="Previous">
-                <PrevIcon />
-              </ControlBtn>
-              <button
-                onClick={togglePlay}
-                title={playing ? "Pause" : "Play"}
-                style={{
-                  width: 58, height: 58, borderRadius: "50%",
-                  background: "#D4AF37", border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "background 0.2s, transform 0.15s",
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#F0CB50";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#D4AF37";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                }}
-              >
+            {/* Playback controls */}
+            <div className="ep-controls">
+              <ControlBtn active={shuffle} onClick={toggleShuffle} title="Shuffle"><ShuffleIcon /></ControlBtn>
+              <ControlBtn onClick={prev} title="Previous"><PrevIcon /></ControlBtn>
+              <button className="ep-play-btn" onClick={togglePlay} title={playing ? "Pause" : "Play"}>
                 {playing
                   ? <div style={{ display: "flex", gap: 4 }}>
                       <div style={{ width: 4, height: 18, background: "#0A0A0A" }} />
@@ -425,46 +268,35 @@ export function ExpandedPlayer() {
                   : <div style={{ width: 0, height: 0, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderLeft: "18px solid #0A0A0A", marginLeft: 4 }} />
                 }
               </button>
-              <ControlBtn onClick={next} title="Next">
-                <NextIcon />
-              </ControlBtn>
+              <ControlBtn onClick={next} title="Next"><NextIcon /></ControlBtn>
               <ControlBtn active={repeat !== "off"} onClick={cycleRepeat} title={`Repeat: ${repeat}`}>
                 {repeat === "one" ? <RepeatOneIcon /> : <RepeatIcon />}
               </ControlBtn>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Volume */}
+            <div className="ep-volume-row">
               <VolumeIcon muted={volume === 0} />
-              <input
-                type="range" min={0} max={100} value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                style={{ flex: 1, accentColor: "#D4AF37", height: 3, cursor: "pointer" }}
-              />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", minWidth: 28 }}>
-                {volume}%
-              </span>
+              <input type="range" min={0} max={100} value={volume} onChange={e => setVolume(Number(e.target.value))} />
+              <span className="ep-volume-label">{volume}%</span>
             </div>
 
-            <div style={{ display: "flex", gap: 12, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16 }}>
+            {/* Platform links */}
+            <div className="ep-platforms">
               <PlatformBtn label="Spotify" color="#1DB954" icon={<SpotifyIcon />} />
               <PlatformBtn label="Apple Music" color="#FC3C44" icon={<AppleIcon />} />
               <PlatformBtn label="YouTube" color="#FF0000" icon={<YoutubeIcon />} />
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", borderRight: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
-            <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-              {(["queue", "artist", "comments"] as const).map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1, padding: "16px 0",
-                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-                    fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase",
-                    background: "none", border: "none", cursor: "pointer",
-                    color: activeTab === tab ? "#D4AF37" : "rgba(255,255,255,0.35)",
-                    borderBottom: activeTab === tab ? "2px solid #D4AF37" : "2px solid transparent",
-                    transition: "color 0.2s",
-                  }}
+          {/* ── MIDDLE: Tabs ── */}
+          <div className="ep-middle">
+            <div className="ep-tabs">
+              {(["queue", "artist", "comments"] as const).map(tab => (
+                <button
+                  key={tab}
+                  className={`ep-tab${activeTab === tab ? " active" : ""}`}
+                  onClick={() => setActiveTab(tab)}
                 >
                   {tab === "queue"
                     ? `Queue (${queue.length})`
@@ -475,17 +307,10 @@ export function ExpandedPlayer() {
               ))}
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: activeTab === "comments" ? 0 : "8px 0" }}>
-              {activeTab === "queue" && (
-                <QueueTab queue={queue} currentIndex={queueIndex} onPlay={play} />
-              )}
+            <div className="ep-tab-content" style={{ padding: activeTab === "comments" ? 0 : "8px 0" }}>
+              {activeTab === "queue" && <QueueTab queue={queue} currentIndex={queueIndex} onPlay={play} />}
               {activeTab === "artist" && (
-                <ArtistTab
-                  artist={currentTrack.artist}
-                  tracks={artistSongs}
-                  currentId={currentTrack.id}
-                  onPlay={play}
-                />
+                <ArtistTab artist={currentTrack.artist} tracks={artistSongs} currentId={currentTrack.id} onPlay={play} />
               )}
               {activeTab === "comments" && (
                 <CommentsTab
@@ -503,24 +328,12 @@ export function ExpandedPlayer() {
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            <div style={{
-              padding: "16px 20px 12px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-              fontSize: 11, letterSpacing: "0.22em", color: "rgba(255,255,255,0.35)",
-              textTransform: "uppercase", flexShrink: 0,
-            }}>
-              Up Next
-            </div>
+          {/* ── RIGHT: Up Next ── */}
+          <div className="ep-right">
+            <div className="ep-section-label">Up Next</div>
 
             {upNext && upNext.id !== currentTrack.id && (
-              <div
-                onClick={() => play(upNext)}
-                style={{ padding: "16px 20px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.2s" }}
-                onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "rgba(212,175,55,0.06)"}
-                onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
-              >
+              <div className="ep-up-next" onClick={() => play(upNext)}>
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                   <img
                     src={upNext.coverUrl || upNext.thumbnail}
@@ -528,7 +341,7 @@ export function ExpandedPlayer() {
                     style={{ width: 56, height: 56, objectFit: "cover", flexShrink: 0, border: "1px solid rgba(212,175,55,0.2)" }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, color: "#FFFFFF", letterSpacing: "0.05em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, color: "#fff", letterSpacing: "0.05em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {upNext.title}
                     </div>
                     <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>
@@ -540,28 +353,21 @@ export function ExpandedPlayer() {
                       </div>
                     )}
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                     {upNext.duration}
-                  </div>
+                  </span>
                 </div>
               </div>
             )}
 
-            <div style={{
-              padding: "12px 20px 8px",
-              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-              fontSize: 11, letterSpacing: "0.22em", color: "rgba(255,255,255,0.35)",
-              textTransform: "uppercase",
-            }}>
+            <div className="ep-section-label" style={{ borderBottom: "none" }}>
               More from {currentTrack.artist}
             </div>
-            <div style={{ overflowY: "auto", flex: 1 }}>
-              {artistSongs
-                .filter((t) => t.id !== currentTrack.id)
-                .map((t) => (
-                  <MiniTrackRow key={t.id} track={t} onPlay={() => play(t)} />
-                ))}
-              {artistSongs.filter((t) => t.id !== currentTrack.id).length === 0 && (
+            <div className="ep-more-scroll">
+              {artistSongs.filter(t => t.id !== currentTrack.id).map(t => (
+                <MiniTrackRow key={t.id} track={t} onPlay={() => play(t)} />
+              ))}
+              {artistSongs.filter(t => t.id !== currentTrack.id).length === 0 && (
                 <div style={{ padding: "12px 20px", fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
                   No other tracks from this artist.
                 </div>
@@ -570,62 +376,36 @@ export function ExpandedPlayer() {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-        @keyframes pulseRing { 0%,100% { opacity: 0.4; transform: scale(1) } 50% { opacity: 0.1; transform: scale(1.04) } }
-      `}</style>
     </>
   );
 }
 
-function StatBadge({ value, label, gold = false }: { value: string | number; label: string; gold?: boolean }) {
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function StatBadge({ value, label }: { value: string | number; label: string }) {
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)",
-      borderRadius: 6, padding: "6px 14px", minWidth: 64,
-    }}>
-      <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 20, color: "#D4AF37", lineHeight: 1 }}>
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </span>
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, letterSpacing: "0.18em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginTop: 2 }}>
-        {label}
-      </span>
+    <div className="ep-stat-badge">
+      <span className="ep-stat-value">{typeof value === "number" ? value.toLocaleString() : value}</span>
+      <span className="ep-stat-label">{label}</span>
     </div>
   );
 }
 
-function CommentsTab({
-  comments, author, text, onAuthorChange, onTextChange, onSubmit, onVote, onReply, onVoteReply,
-}: {
+function CommentsTab({ comments, author, text, onAuthorChange, onTextChange, onSubmit, onVote, onReply, onVoteReply }: {
   comments: Comment[];
   author: string;
   text: string;
   onAuthorChange: (v: string) => void;
   onTextChange: (v: string) => void;
   onSubmit: () => void;
-  onVote: (commentId: string, vote: "like" | "dislike") => void;
+  onVote: (id: string, vote: "like" | "dislike") => void;
   onReply: (commentId: string, author: string, text: string) => void;
   onVoteReply: (commentId: string, replyId: string, vote: "like" | "dislike") => void;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{
-        padding: "16px 20px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        flexShrink: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}>
-        <input
-          value={author}
-          onChange={e => onAuthorChange(e.target.value)}
-          placeholder="Your name (optional)"
-          style={inputStyle}
-        />
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <input value={author} onChange={e => onAuthorChange(e.target.value)} placeholder="Your name (optional)" style={inputStyle} />
         <div style={{ display: "flex", gap: 8 }}>
           <textarea
             value={text}
@@ -635,12 +415,10 @@ function CommentsTab({
             rows={2}
             style={{ ...inputStyle, flex: 1, resize: "none" } as React.CSSProperties}
           />
-          <button onClick={onSubmit} disabled={!text.trim()} style={postBtnStyle(!!text.trim())}>
-            Post
-          </button>
+          <button onClick={onSubmit} disabled={!text.trim()} style={postBtnStyle(!!text.trim())}>Post</button>
         </div>
         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
-          Press Enter to post · Comments are always visible to everyone
+          Press Enter to post · Comments are visible to everyone
         </div>
       </div>
 
@@ -648,9 +426,7 @@ function CommentsTab({
         {comments.length === 0 ? (
           <div style={{ padding: "32px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>💬</div>
-            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
-              No comments yet. Be the first!
-            </div>
+            <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>No comments yet. Be the first!</div>
           </div>
         ) : (
           comments.map(c => (
@@ -662,9 +438,7 @@ function CommentsTab({
   );
 }
 
-function CommentItem({
-  comment, onVote, onReply, onVoteReply,
-}: {
+function CommentItem({ comment, onVote, onReply, onVoteReply }: {
   comment: Comment;
   onVote: (id: string, vote: "like" | "dislike") => void;
   onReply: (commentId: string, author: string, text: string) => void;
@@ -688,11 +462,7 @@ function CommentItem({
     <div style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
       <div style={{ padding: "14px 20px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: "50%", background: avatarColor,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff", flexShrink: 0,
-          }}>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: avatarColor, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff", flexShrink: 0 }}>
             {comment.author[0]?.toUpperCase() || "?"}
           </div>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.1em", color: "#D4AF37" }}>
@@ -712,27 +482,14 @@ function CommentItem({
           <VoteBtn icon="👎" count={comment.dislikes} active={comment.userVote === "dislike"} activeColor="#f87171" onClick={() => onVote(comment.id, "dislike")} />
           <button
             onClick={() => setShowReplyBox(r => !r)}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-              fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: showReplyBox ? "#D4AF37" : "rgba(255,255,255,0.35)",
-              padding: "3px 6px", transition: "color 0.2s",
-            }}
-            onMouseEnter={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)"; }}
-            onMouseLeave={e => { if (!showReplyBox) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
+            style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: showReplyBox ? "#D4AF37" : "rgba(255,255,255,0.35)", padding: "3px 6px", transition: "color 0.2s" }}
           >
             ↩ Reply
           </button>
           {comment.replies.length > 0 && (
             <button
               onClick={() => setShowReplies(r => !r)}
-              style={{
-                background: "none", border: "none", cursor: "pointer",
-                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-                fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase",
-                color: "rgba(212,175,55,0.6)", padding: "3px 6px", transition: "color 0.2s",
-              }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(212,175,55,0.6)", padding: "3px 6px", transition: "color 0.2s" }}
             >
               {showReplies ? "▲ Hide" : `▼ ${comment.replies.length} repl${comment.replies.length === 1 ? "y" : "ies"}`}
             </button>
@@ -741,12 +498,7 @@ function CommentItem({
 
         {showReplyBox && (
           <div style={{ marginTop: 10, paddingLeft: 36, display: "flex", flexDirection: "column", gap: 6 }}>
-            <input
-              value={replyAuthor}
-              onChange={e => setReplyAuthor(e.target.value)}
-              placeholder="Your name (optional)"
-              style={{ ...inputStyle, fontSize: 12 } as React.CSSProperties}
-            />
+            <input value={replyAuthor} onChange={e => setReplyAuthor(e.target.value)} placeholder="Your name (optional)" style={{ ...inputStyle, fontSize: 12 } as React.CSSProperties} />
             <div style={{ display: "flex", gap: 6 }}>
               <textarea
                 value={replyText}
@@ -756,9 +508,7 @@ function CommentItem({
                 rows={2}
                 style={{ ...inputStyle, flex: 1, resize: "none", fontSize: 12 } as React.CSSProperties}
               />
-              <button onClick={submitReply} disabled={!replyText.trim()} style={postBtnStyle(!!replyText.trim())}>
-                Post
-              </button>
+              <button onClick={submitReply} disabled={!replyText.trim()} style={postBtnStyle(!!replyText.trim())}>Post</button>
             </div>
           </div>
         )}
@@ -767,7 +517,7 @@ function CommentItem({
       {showReplies && comment.replies.length > 0 && (
         <div style={{ background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {comment.replies.map(reply => (
-            <ReplyItem key={reply.id} reply={reply} onVote={(vote) => onVoteReply(comment.id, reply.id, vote)} />
+            <ReplyItem key={reply.id} reply={reply} onVote={vote => onVoteReply(comment.id, reply.id, vote)} />
           ))}
         </div>
       )}
@@ -780,16 +530,10 @@ function ReplyItem({ reply, onVote }: { reply: CommentReply; onVote: (vote: "lik
   return (
     <div style={{ padding: "10px 20px 10px 52px", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
-        <div style={{
-          width: 22, height: 22, borderRadius: "50%", background: avatarColor,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "'Bebas Neue', sans-serif", fontSize: 11, color: "#fff", flexShrink: 0,
-        }}>
+        <div style={{ width: 22, height: 22, borderRadius: "50%", background: avatarColor, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue', sans-serif", fontSize: 11, color: "#fff", flexShrink: 0 }}>
           {reply.author[0]?.toUpperCase() || "?"}
         </div>
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", color: "rgba(212,175,55,0.8)" }}>
-          {reply.author}
-        </span>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", color: "rgba(212,175,55,0.8)" }}>{reply.author}</span>
         <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.18)", marginLeft: "auto" }}>
           {new Date(reply.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
@@ -805,9 +549,7 @@ function ReplyItem({ reply, onVote }: { reply: CommentReply; onVote: (vote: "lik
   );
 }
 
-function VoteBtn({ icon, count, active, activeColor, onClick }: {
-  icon: string; count: number; active: boolean; activeColor: string; onClick: () => void;
-}) {
+function VoteBtn({ icon, count, active, activeColor, onClick }: { icon: string; count: number; active: boolean; activeColor: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -816,19 +558,142 @@ function VoteBtn({ icon, count, active, activeColor, onClick }: {
         background: active ? `${activeColor}18` : "rgba(255,255,255,0.04)",
         border: active ? `1px solid ${activeColor}55` : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 4, cursor: "pointer", padding: "3px 8px",
-        fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600,
-        fontSize: 12, color: active ? activeColor : "rgba(255,255,255,0.35)",
+        fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 12,
+        color: active ? activeColor : "rgba(255,255,255,0.35)",
         transition: "all 0.18s",
         transform: active ? "scale(1.05)" : "scale(1)",
       }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)"; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
     >
       <span style={{ fontSize: 13 }}>{icon}</span>
       {count > 0 && <span>{count}</span>}
     </button>
   );
 }
+
+function QueueTab({ queue, currentIndex, onPlay }: { queue: Track[]; currentIndex: number; onPlay: (t: Track) => void }) {
+  return (
+    <>
+      {queue.map((t, i) => {
+        const isCurrent = i === currentIndex;
+        return (
+          <div
+            key={`${t.id}-${i}`}
+            onClick={() => onPlay(t)}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", cursor: "pointer", background: isCurrent ? "rgba(212,175,55,0.08)" : "transparent", borderLeft: isCurrent ? "2px solid #D4AF37" : "2px solid transparent", transition: "background 0.18s" }}
+            onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+            onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+          >
+            <div style={{ width: 20, textAlign: "center", flexShrink: 0 }}>
+              {isCurrent
+                ? <PlayingBars />
+                : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{i + 1}</span>
+              }
+            </div>
+            <img src={t.coverUrl || t.thumbnail} alt={t.title} style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 14, color: isCurrent ? "#D4AF37" : "#fff", letterSpacing: "0.05em", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{t.artist}</div>
+            </div>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{t.duration}</span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function ArtistTab({ artist, tracks, currentId, onPlay }: { artist: string; tracks: Track[]; currentId: string; onPlay: (t: Track) => void }) {
+  return (
+    <div>
+      <div style={{ padding: "16px 20px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: "#fff", letterSpacing: "0.07em" }}>{artist}</div>
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{tracks.length} track{tracks.length !== 1 ? "s" : ""} in queue</div>
+      </div>
+      {tracks.map(t => {
+        const isCurrent = t.id === currentId;
+        return (
+          <div
+            key={t.id}
+            onClick={() => onPlay(t)}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", cursor: "pointer", background: isCurrent ? "rgba(212,175,55,0.08)" : "transparent", borderLeft: isCurrent ? "2px solid #D4AF37" : "2px solid transparent", transition: "background 0.18s" }}
+            onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+            onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+          >
+            {isCurrent ? <PlayingBars /> : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)", width: 20, textAlign: "center", flexShrink: 0 }}>▶</span>}
+            <img src={t.coverUrl || t.thumbnail} alt={t.title} style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 14, color: isCurrent ? "#D4AF37" : "#fff", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{t.genre || t.category}</div>
+            </div>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{t.duration}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniTrackRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
+  return (
+    <div
+      onClick={onPlay}
+      style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", cursor: "pointer", transition: "background 0.15s" }}
+      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"}
+      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
+    >
+      <img src={track.coverUrl || track.thumbnail} alt={track.title} style={{ width: 34, height: 34, objectFit: "cover", flexShrink: 0, opacity: 0.6 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#fff", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.title}</div>
+        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{track.duration}</div>
+      </div>
+    </div>
+  );
+}
+
+function PlayingBars() {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 16, width: 20 }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{ flex: 1, background: "#D4AF37", borderRadius: 1, animation: `barBounce${i} 0.8s ease infinite`, animationDelay: `${i * 0.15}s`, height: "60%" }} />
+      ))}
+      <style>{`
+        @keyframes barBounce0 { 0%,100%{height:40%} 50%{height:100%} }
+        @keyframes barBounce1 { 0%,100%{height:80%} 50%{height:30%} }
+        @keyframes barBounce2 { 0%,100%{height:55%} 50%{height:90%} }
+      `}</style>
+    </div>
+  );
+}
+
+function ControlBtn({ children, onClick, active = false, title }: { children: React.ReactNode; onClick: () => void; active?: boolean; title?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      style={{ background: "none", border: "none", cursor: "pointer", color: active ? "#D4AF37" : "rgba(255,255,255,0.55)", padding: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.2s, transform 0.15s", borderRadius: "50%" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.15)"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = active ? "#D4AF37" : "rgba(255,255,255,0.55)"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PlatformBtn({ label, color, icon }: { label: string; color: string; icon: React.ReactNode }) {
+  return (
+    <button
+      title={label}
+      style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "6px 12px", cursor: "pointer", transition: "border-color 0.2s, background 0.2s", color: "rgba(255,255,255,0.55)" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = color; (e.currentTarget as HTMLButtonElement).style.color = color; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.55)"; }}
+    >
+      {icon}
+      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</span>
+    </button>
+  );
+}
+
+// ── Inline styles for comment inputs ──────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.05)",
@@ -860,176 +725,9 @@ const postBtnStyle = (enabled: boolean): React.CSSProperties => ({
   flexShrink: 0,
 });
 
-function QueueTab({ queue, currentIndex, onPlay }: { queue: Track[]; currentIndex: number; onPlay: (t: Track) => void }) {
-  return (
-    <>
-      {queue.map((t, i) => {
-        const isCurrent = i === currentIndex;
-        return (
-          <div
-            key={`${t.id}-${i}`}
-            onClick={() => onPlay(t)}
-            style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "10px 20px", cursor: "pointer",
-              background: isCurrent ? "rgba(212,175,55,0.08)" : "transparent",
-              borderLeft: isCurrent ? "2px solid #D4AF37" : "2px solid transparent",
-              transition: "background 0.18s",
-            }}
-            onMouseEnter={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
-            onMouseLeave={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-          >
-            <div style={{ width: 20, textAlign: "center", flexShrink: 0 }}>
-              {isCurrent
-                ? <PlayingBars />
-                : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{i + 1}</span>
-              }
-            </div>
-            <img src={t.coverUrl || t.thumbnail} alt={t.title}
-              style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontFamily: "'Bebas Neue', sans-serif", fontSize: 14,
-                color: isCurrent ? "#D4AF37" : "#FFFFFF",
-                letterSpacing: "0.05em", lineHeight: 1.2,
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                {t.title}
-              </div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                {t.artist}
-              </div>
-            </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
-              {t.duration}
-            </span>
-          </div>
-        );
-      })}
-    </>
-  );
-}
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
-function ArtistTab({ artist, tracks, currentId, onPlay }: { artist: string; tracks: Track[]; currentId: string; onPlay: (t: Track) => void }) {
-  return (
-    <div>
-      <div style={{ padding: "16px 20px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: "#FFFFFF", letterSpacing: "0.07em" }}>{artist}</div>
-        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-          {tracks.length} track{tracks.length !== 1 ? "s" : ""} in queue
-        </div>
-      </div>
-      {tracks.map((t) => {
-        const isCurrent = t.id === currentId;
-        return (
-          <div
-            key={t.id}
-            onClick={() => onPlay(t)}
-            style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "10px 20px", cursor: "pointer",
-              background: isCurrent ? "rgba(212,175,55,0.08)" : "transparent",
-              borderLeft: isCurrent ? "2px solid #D4AF37" : "2px solid transparent",
-              transition: "background 0.18s",
-            }}
-            onMouseEnter={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
-            onMouseLeave={(e) => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-          >
-            {isCurrent
-              ? <PlayingBars />
-              : <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.25)", width: 20, textAlign: "center", flexShrink: 0 }}>▶</span>
-            }
-            <img src={t.coverUrl || t.thumbnail} alt={t.title}
-              style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0, opacity: isCurrent ? 1 : 0.65 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 14, color: isCurrent ? "#D4AF37" : "#FFFFFF", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {t.title}
-              </div>
-              <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                {t.genre || t.category}
-              </div>
-            </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{t.duration}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function MiniTrackRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
-  return (
-    <div
-      onClick={onPlay}
-      style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", cursor: "pointer", transition: "background 0.15s" }}
-      onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"}
-      onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
-    >
-      <img src={track.coverUrl || track.thumbnail} alt={track.title}
-        style={{ width: 34, height: 34, objectFit: "cover", flexShrink: 0, opacity: 0.6 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 13, color: "#FFFFFF", letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.title}</div>
-        <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{track.duration}</div>
-      </div>
-    </div>
-  );
-}
-
-function PlayingBars() {
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 16, width: 20 }}>
-      {[0, 1, 2].map((i) => (
-        <div key={i} style={{
-          flex: 1, background: "#D4AF37", borderRadius: 1,
-          animation: `barBounce${i} 0.8s ease infinite`,
-          animationDelay: `${i * 0.15}s`,
-          height: "60%",
-        }} />
-      ))}
-      <style>{`
-        @keyframes barBounce0 { 0%,100%{height:40%} 50%{height:100%} }
-        @keyframes barBounce1 { 0%,100%{height:80%} 50%{height:30%} }
-        @keyframes barBounce2 { 0%,100%{height:55%} 50%{height:90%} }
-      `}</style>
-    </div>
-  );
-}
-
-function ControlBtn({ children, onClick, active = false, title }: { children: React.ReactNode; onClick: () => void; active?: boolean; title?: string }) {
-  return (
-    <button onClick={onClick} title={title} style={{
-      background: "none", border: "none", cursor: "pointer",
-      color: active ? "#D4AF37" : "rgba(255,255,255,0.55)",
-      padding: 8, display: "flex", alignItems: "center", justifyContent: "center",
-      transition: "color 0.2s, transform 0.15s", borderRadius: "50%",
-    }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#D4AF37"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.15)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = active ? "#D4AF37" : "rgba(255,255,255,0.55)"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function PlatformBtn({ label, color, icon }: { label: string; color: string; icon: React.ReactNode }) {
-  return (
-    <button title={label} style={{
-      display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)",
-      border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "6px 12px",
-      cursor: "pointer", transition: "border-color 0.2s, background 0.2s", color: "rgba(255,255,255,0.55)",
-    }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = color; (e.currentTarget as HTMLButtonElement).style.color = color; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.55)"; }}
-    >
-      {icon}
-      <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</span>
-    </button>
-  );
-}
-
-const IC = (d: string, s = 22) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d={d} /></svg>
-);
+const IC = (d: string, s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d={d} /></svg>;
 
 function PrevIcon() { return IC("M6 6h2v12H6zm3.5 6 8.5 6V6z"); }
 function NextIcon() { return IC("M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"); }

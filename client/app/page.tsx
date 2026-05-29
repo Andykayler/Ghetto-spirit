@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import FeatureCards from "@/components/FeatureCards";
+import TrendingSection from "@/components/trending";
 import MusicPlayerBar from "@/components/MusicPlayerBar";
+import { ContactFooter } from "@/components/ContactFooter";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -19,8 +20,9 @@ export default function Home() {
     <main className="min-h-screen flex flex-col" style={{ backgroundColor: '#0A0A0A' }}>
       <Navbar />
       <HeroSection />
-      <FeatureCards />
+      <TrendingSection />
       <MusicPlayerBar />
+      <ContactFooter />
     </main>
   );
 }

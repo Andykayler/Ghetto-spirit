@@ -24,25 +24,21 @@ interface ArtistGridProps {
   activeCategory?: string;
 }
 
-export function ArtistGrid({ 
-  searchQuery = "", 
-  selectedGenre = "ALL GENRES", 
-  activeCategory = "ALL ARTISTS" 
+export function ArtistGrid({
+  searchQuery = "",
+  selectedGenre = "ALL GENRES",
+  activeCategory = "ALL ARTISTS",
 }: ArtistGridProps) {
-  
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "artists"), (snapshot) => {
-      const data: Artist[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Artist, "id">),
-      }));
-      setArtists(data);
+      setArtists(
+        snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Omit<Artist, "id">) }))
+      );
       setLoading(false);
     });
-
     return () => unsub();
   }, []);
 
@@ -53,39 +49,55 @@ export function ArtistGrid({
       (activeCategory === "NEW" && a.joined === new Date().getFullYear().toString()) ||
       (activeCategory === "VERIFIED" && a.status === "verified");
 
-    const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGenre = selectedGenre === "ALL GENRES" || a.genre === selectedGenre;
-
-    return matchesCat && matchesSearch && matchesGenre;
+    return (
+      matchesCat &&
+      a.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (selectedGenre === "ALL GENRES" || a.genre === selectedGenre)
+    );
   });
 
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "80px 48px", background: "#0a0a0a" }}>
-        <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: "1.5rem", color: "#444", letterSpacing: "0.2em" }}>
-          LOADING ARTISTS...
-        </p>
-      </div>
-    );
-  }
+  const emptyMessage = loading ? "LOADING ARTISTS..." : filtered.length === 0 ? "NO ARTISTS FOUND" : null;
 
-  if (filtered.length === 0) {
+  if (emptyMessage) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 48px", background: "#0a0a0a" }}>
-        <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: "1.5rem", color: "#444444", letterSpacing: "0.2em" }}>
-          NO ARTISTS FOUND
+      <div style={{ display: "flex", justifyContent: "center", padding: "80px 24px", background: "#0a0a0a" }}>
+        <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: "1.5rem", color: "#444", letterSpacing: "0.2em" }}>
+          {emptyMessage}
         </p>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "#0a0a0a", padding: "20px 48px 40px 48px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 3 }}>
-        {filtered.map((artist) => (
-          <ArtistCard key={artist.id} artist={artist} />
-        ))}
+    <>
+      <style>{`
+        .artist-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 3px;
+        }
+        @media (max-width: 1280px) {
+          .artist-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 900px) {
+          .artist-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+          .artist-grid { grid-template-columns: repeat(2, 1fr); }
+          .artist-grid-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+        }
+        @media (max-width: 1280px) and (min-width: 601px) {
+          .artist-grid-wrap { padding-left: 32px !important; padding-right: 32px !important; }
+        }
+      `}</style>
+
+      <div className="artist-grid-wrap" style={{ background: "#0a0a0a", padding: "20px 48px 40px" }}>
+        <div className="artist-grid">
+          {filtered.map((artist) => (
+            <ArtistCard key={artist.id} artist={artist} />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-// ─── AboutCTA ─────────────────────────────────────────────────────────────────
 export function AboutCTA() {
   return (
     <section
@@ -12,6 +11,19 @@ export function AboutCTA() {
         overflow: "hidden",
       }}
     >
+      <style>{`
+        @media (max-width: 768px) {
+          .about-cta-inner {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 32px !important;
+          }
+          .about-cta-section {
+            padding: 48px 24px !important;
+          }
+        }
+      `}</style>
+
       {/* Background texture */}
       <div
         style={{
@@ -28,17 +40,14 @@ export function AboutCTA() {
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background:
-            "linear-gradient(135deg, rgba(212,175,55,0.08) 0%, transparent 50%)",
+          inset: 0,
+          background: "linear-gradient(135deg, rgba(212,175,55,0.08) 0%, transparent 50%)",
           pointerEvents: "none",
         }}
       />
 
       <div
+        className="about-cta-inner"
         style={{
           position: "relative",
           zIndex: 2,
@@ -52,14 +61,7 @@ export function AboutCTA() {
       >
         {/* Left text */}
         <div style={{ maxWidth: 600 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <span
               style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
@@ -104,46 +106,14 @@ export function AboutCTA() {
           </p>
         </div>
 
-        {/* Right buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, flexShrink: 0 }}>
-          <a
-            href="/contact"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              padding: "16px 40px",
-              background: "#D4AF37",
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: "0.16em",
-              color: "#0A0A0A",
-              textDecoration: "none",
-              textTransform: "uppercase",
-              transition: "background 0.25s, transform 0.2s",
-              minWidth: 220,
-              textAlign: "center",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "#F0CB50";
-              (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "#D4AF37";
-              (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
-            }}
-          >
-            JOIN THE MOVEMENT →
-          </a>
+        {/* Right: single button */}
+        <div style={{ flexShrink: 0 }}>
           <a
             href="/artists"
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
               padding: "16px 40px",
               border: "1.5px solid rgba(255,255,255,0.3)",
               fontFamily: "'Barlow Condensed', sans-serif",
@@ -157,13 +127,13 @@ export function AboutCTA() {
               minWidth: 220,
               textAlign: "center",
             }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#D4AF37";
-              (e.currentTarget as HTMLAnchorElement).style.background = "rgba(212,175,55,0.08)";
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.borderColor = "#D4AF37";
+              e.currentTarget.style.background = "rgba(212,175,55,0.08)";
             }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.3)";
-              (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+              e.currentTarget.style.background = "transparent";
             }}
           >
             MEET OUR ARTISTS

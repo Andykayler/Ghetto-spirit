@@ -2,8 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-// ─── AboutHero ────────────────────────────────────────────────────────────────
-
 export function AboutHero() {
   const headlineRef = useRef<HTMLDivElement>(null);
 
@@ -24,14 +22,24 @@ export function AboutHero() {
       style={{
         position: "relative",
         width: "100%",
-        minHeight: 580,
         display: "flex",
         alignItems: "center",
         overflow: "hidden",
         background: "#0A0A0A",
+        padding: "48px 60px 36px",
       }}
     >
-      {/* Background concert image */}
+      <style>{`
+        @media (max-width: 980px) {
+          .about-hero-section { padding: 36px 24px 28px !important; }
+          .about-hero-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .about-hero-divider,
+          .about-hero-body,
+          .about-hero-cta { display: none !important; }
+        }
+      `}</style>
+
+      {/* Background */}
       <div
         style={{
           position: "absolute",
@@ -54,149 +62,135 @@ export function AboutHero() {
         }}
       />
 
-      {/* Left content */}
+      {/* Grid */}
       <div
-        ref={headlineRef}
+        className="about-hero-grid"
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "60px 60px 60px 60px",
-          maxWidth: 560,
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1px 0.8fr 0.8fr",
+          gap: "36px",
+          alignItems: "center",
         }}
       >
-        {/* Eyebrow */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 600,
-              fontSize: 13,
-              letterSpacing: "0.22em",
-              color: "#D4AF37",
-              textTransform: "uppercase",
-            }}
-          >
-            ABOUT US
-          </span>
-          <div style={{ width: 48, height: 1, background: "#D4AF37" }} />
-        </div>
-
-        {/* Main headline */}
-        <h1
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: "clamp(52px, 7vw, 84px)",
-            lineHeight: 0.95,
-            color: "#FFFFFF",
-            margin: "0 0 4px 0",
-            letterSpacing: "0.02em",
-          }}
-        >
-          MORE THAN
-          <br />
-          MUSIC.{" "}
-          <span style={{ color: "#D4AF37" }}>IT&apos;S A</span>
-          <br />
-          <span style={{ color: "#D4AF37" }}>MOVEMENT.</span>
-        </h1>
-
-        {/* Body copy */}
-        <p
-          style={{
-            fontFamily: "'Barlow', sans-serif",
-            fontSize: 14,
-            lineHeight: 1.7,
-            color: "rgba(255,255,255,0.72)",
-            margin: "24px 0 36px 0",
-            maxWidth: 360,
-          }}
-        >
-          Ghetto Spirit Entertainment is a global platform built to discover,
-          develop, and empower raw talent. We represent the streets, the
-          struggle, and the spirit of a generation that refuses to be ignored.
-        </p>
-
-        {/* CTA */}
-        <a
-          href="#mission"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "14px 28px",
-            border: "1.5px solid #FFFFFF",
+        {/* LEFT */}
+        <div ref={headlineRef}>
+          <p style={{
             fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 700,
-            fontSize: 13,
-            letterSpacing: "0.18em",
-            color: "#FFFFFF",
-            textDecoration: "none",
+            fontWeight: 600,
+            fontSize: 12,
+            letterSpacing: "0.12em",
+            color: "#888",
+            marginBottom: 16,
             textTransform: "uppercase",
-            transition: "background 0.25s, color 0.25s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.background = "#D4AF37";
-            (e.currentTarget as HTMLAnchorElement).style.borderColor = "#D4AF37";
-            (e.currentTarget as HTMLAnchorElement).style.color = "#0A0A0A";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-            (e.currentTarget as HTMLAnchorElement).style.borderColor = "#FFFFFF";
-            (e.currentTarget as HTMLAnchorElement).style.color = "#FFFFFF";
-          }}
-        >
-          JOIN THE MOVEMENT
-          <span style={{ fontSize: 16 }}>→</span>
-        </a>
-      </div>
+          }}>
+            HOME / <span style={{ color: "#D4AF37" }}>ABOUT US</span>
+          </p>
 
-      {/* Right side tagline */}
-      <div
-        style={{
-          position: "absolute",
-          right: 60,
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 2,
-          textAlign: "right",
-        }}
-      >
-        {["RAW TALENT.", "REAL CULTURE.", "BIGGER DREAMS."].map((line, i) => (
-          <div
-            key={line}
+          <h1 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: "clamp(3rem, 6vw, 5.5rem)",
+            lineHeight: 0.92,
+            color: "#FFFFFF",
+            margin: 0,
+            letterSpacing: "0.02em",
+          }}>
+            MORE THAN
+            <br />
+            MUSIC.{" "}
+            <span style={{ color: "#D4AF37" }}>IT&apos;S A</span>
+            <br />
+            <span style={{ color: "#D4AF37" }}>MOVEMENT.</span>
+          </h1>
+
+          <div style={{ width: 72, height: 3, background: "#D4AF37", margin: "20px 0" }} />
+
+          <p style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            color: "#D4AF37",
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: "0.2em",
+            fontStyle: "italic",
+            textTransform: "uppercase",
+            margin: 0,
+          }}>
+            RAW TALENT. REAL CULTURE. BIGGER DREAMS.
+          </p>
+        </div>
+
+        {/* DIVIDER */}
+        <div className="about-hero-divider" style={{
+          width: 1,
+          height: 120,
+          background: "linear-gradient(to bottom, transparent, #D4AF37, transparent)",
+          opacity: 0.6,
+        }} />
+
+        {/* CENTER: body copy */}
+        <div className="about-hero-body">
+          <p style={{
+            fontFamily: "'Barlow', sans-serif",
+            color: "#c5c5c5",
+            fontSize: 14,
+            lineHeight: 1.85,
+            maxWidth: 340,
+            margin: 0,
+          }}>
+            Ghetto Spirit Entertainment is a global platform built to discover,
+            develop, and empower raw talent. We represent the streets, the
+            struggle, and the spirit of a generation that refuses to be ignored.
+          </p>
+        </div>
+
+        {/* RIGHT: CTA */}
+        <div className="about-hero-cta" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+          <a
+            href="#mission"
             style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: "clamp(18px, 2.2vw, 28px)",
-              letterSpacing: "0.08em",
-              color: i === 2 ? "#D4AF37" : "rgba(255,255,255,0.55)",
-              lineHeight: 1.5,
-              animationDelay: `${0.3 + i * 0.15}s`,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "14px 28px",
+              border: "1.5px solid #FFFFFF",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: 13,
+              letterSpacing: "0.18em",
+              color: "#FFFFFF",
+              textDecoration: "none",
+              textTransform: "uppercase",
+              transition: "background 0.25s, color 0.25s",
+            }}
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.background = "#D4AF37";
+              e.currentTarget.style.borderColor = "#D4AF37";
+              e.currentTarget.style.color = "#0A0A0A";
+            }}
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "#FFFFFF";
+              e.currentTarget.style.color = "#FFFFFF";
             }}
           >
-            {line}
-          </div>
-        ))}
-        {/* Crown icon */}
-        <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
-          <CrownIcon size={32} color="#D4AF37" />
+            JOIN THE MOVEMENT
+            <span style={{ fontSize: 16 }}>→</span>
+          </a>
         </div>
       </div>
-    </section>
-  );
-}
 
-// ─── Inline Crown Icon ─────────────────────────────────────────────────────────
-function CrownIcon({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M2 19h20v2H2v-2zM2 5l5 7 5-9 5 9 5-7v12H2V5z" />
-    </svg>
+      {/* Bottom fade */}
+      <div style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 50,
+        background: "linear-gradient(to top, #0A0A0A 0%, transparent 100%)",
+        zIndex: 1,
+      }} />
+    </section>
   );
 }

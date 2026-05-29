@@ -1,0 +1,517 @@
+/* ExpandedPlayer.css */
+
+/* ==================== OVERLAY ==================== */
+.ep-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  animation: ep-fadeIn 0.25s ease;
+}
+
+/* ==================== PANEL ==================== */
+.ep-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 82vh;
+  background: #0e0e0e;
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: ep-slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ep-drag-bar-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+  flex-shrink: 0;
+}
+
+.ep-drag-bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+/* ==================== BODY GRID ==================== */
+.ep-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 380px;
+  overflow: hidden;
+}
+
+/* ==================== LEFT COLUMN ==================== */
+.ep-left {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ep-cover-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.ep-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  display: block;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.ep-cover.playing {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.25);
+  transform: scale(1.02);
+}
+
+.ep-pulse-ring {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  animation: ep-pulseRing 2s ease infinite;
+  pointer-events: none;
+}
+
+/* Track info row */
+.ep-track-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.ep-track-text {
+  flex: 1;
+  min-width: 0;
+  padding-right: 8px;
+}
+
+.ep-track-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: #fff;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ep-track-artist {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+}
+
+.ep-track-count {
+  color: rgba(212, 175, 55, 0.7);
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.ep-action-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ep-icon-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  padding: 4px 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ep-icon-btn:hover {
+  color: #d4af37;
+}
+
+.ep-icon-btn.liked {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+  transform: scale(1.15);
+  font-size: 20px;
+}
+
+.ep-icon-btn.downloading {
+  background: rgba(212, 175, 55, 0.1);
+  color: #d4af37;
+  cursor: default;
+}
+
+.ep-download-error {
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin-top: 6px;
+}
+
+.ep-genre-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  padding: 3px 8px;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.ep-stats-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Waveform */
+.ep-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 52px;
+  cursor: pointer;
+}
+
+.ep-wave-bar {
+  flex: 1;
+  max-height: 48px;
+  min-height: 3px;
+  border-radius: 2px;
+}
+
+/* Progress */
+.ep-progress-wrap {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.ep-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #d4af37;
+  border-radius: 2px;
+}
+
+.ep-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d4af37;
+  border: 2px solid #0e0e0e;
+}
+
+.ep-time-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ep-time {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.06em;
+}
+
+/* Controls */
+.ep-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.ep-play-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #d4af37;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.ep-play-btn:hover {
+  background: #f0cb50;
+  transform: scale(1.06);
+}
+
+/* Volume */
+.ep-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ep-volume-row input[type="range"] {
+  flex: 1;
+  accent-color: #d4af37;
+  height: 3px;
+  cursor: pointer;
+}
+
+.ep-volume-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 28px;
+}
+
+/* Platform buttons */
+.ep-platforms {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* ==================== MIDDLE COLUMN ==================== */
+.ep-middle {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.ep-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.ep-tab {
+  flex: 1;
+  padding: 16px 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.ep-tab.active {
+  color: #d4af37;
+  border-bottom-color: #d4af37;
+}
+
+.ep-tab:not(.active) {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.ep-tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ==================== RIGHT COLUMN ==================== */
+.ep-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ep-section-label {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.ep-up-next {
+  padding: 16px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s;
+}
+
+.ep-up-next:hover {
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.ep-more-scroll {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ==================== STAT BADGE ==================== */
+.ep-stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 6px;
+  padding: 6px 14px;
+  min-width: 64px;
+}
+
+.ep-stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: #d4af37;
+  line-height: 1;
+}
+
+.ep-stat-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes ep-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ep-slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes ep-pulseRing {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.1; transform: scale(1.04); }
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+/* Tablet: hide right column, 2-col layout */
+@media (max-width: 1024px) {
+  .ep-body {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ep-right {
+    display: none;
+  }
+}
+
+/* Mobile: single column, taller panel */
+@media (max-width: 640px) {
+  .ep-panel {
+    height: 92vh;
+  }
+
+  .ep-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* On mobile show left col then middle col stacked */
+  .ep-left {
+    padding: 16px 20px;
+    gap: 14px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    /* Don't let it fill full height — let it be content height */
+    overflow-y: visible;
+    flex-shrink: 0;
+  }
+
+  .ep-cover-wrap {
+    max-width: 200px;
+  }
+
+  .ep-track-title {
+    font-size: 18px;
+  }
+
+  .ep-controls {
+    gap: 16px;
+  }
+
+  .ep-play-btn {
+    width: 50px;
+    height: 50px;
+  }
+
+  .ep-platforms {
+    display: none; /* hide platform links on mobile to save space */
+  }
+
+  .ep-middle {
+    border-right: none;
+    min-height: 0;
+  }
+
+  /* Make the whole panel scrollable on mobile */
+  .ep-panel {
+    overflow-y: auto;
+  }
+
+  .ep-body {
+    overflow: visible;
+  }
+
+  .ep-tab-content {
+    max-height: 40vh;
+  }
+
+  .ep-stat-badge {
+    padding: 5px 10px;
+    min-width: 52px;
+  }
+
+  .ep-stat-value {
+    font-size: 16px;
+  }
+}

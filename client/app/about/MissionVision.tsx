@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { STATS } from "./types";
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
 function CrownIcon() {
   return (
     <svg width={22} height={22} viewBox="0 0 24 24" fill="#D4AF37">
@@ -28,7 +27,6 @@ function GlobeIcon() {
 
 const ICON_MAP = { crown: CrownIcon, music: MusicIcon, globe: GlobeIcon };
 
-// ─── MissionVision ─────────────────────────────────────────────────────────────
 export function MissionVision() {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -63,17 +61,44 @@ export function MissionVision() {
         borderTop: "1px solid rgba(212,175,55,0.15)",
       }}
     >
+      <style>{`
+        @media (max-width: 900px) {
+          .mv-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+            padding: 0 !important;
+          }
+          .mv-section {
+            padding: 48px 24px !important;
+          }
+          .mv-logo-card {
+            aspect-ratio: unset !important;
+            padding: 32px 24px !important;
+            min-height: 180px !important;
+          }
+          .mv-stats {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 20px !important;
+          }
+          .mv-stats > div {
+            flex: 1 1 40% !important;
+          }
+        }
+      `}</style>
+
       <div
+        className="mv-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "340px 1fr 1fr auto",
+          gridTemplateColumns: "300px 1fr 1fr auto",
           gap: 48,
           alignItems: "start",
           maxWidth: 1280,
           margin: "0 auto",
         }}
       >
-        {/* Studio image */}
+        {/* Logo card */}
         <div
           data-reveal
           style={{
@@ -83,44 +108,65 @@ export function MissionVision() {
           }}
         >
           <div
+            className="mv-logo-card"
             style={{
               width: "100%",
               aspectRatio: "4/3",
-              backgroundImage: "url('/about/studio.jpg')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              border: "2px solid rgba(212,175,55,0.3)",
+              border: "1px solid rgba(212,175,55,0.3)",
+              background: "linear-gradient(135deg, #0a0a0a 0%, #1a1610 50%, #0a0a0a 100%)",
               position: "relative",
               overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {/* Neon overlay label */}
-            <div
+            {/* Corner accents */}
+            <div style={{
+              position: "absolute", top: 0, left: 0,
+              width: 24, height: 24,
+              borderTop: "2px solid #D4AF37",
+              borderLeft: "2px solid #D4AF37",
+            }} />
+            <div style={{
+              position: "absolute", top: 0, right: 0,
+              width: 24, height: 24,
+              borderTop: "2px solid #D4AF37",
+              borderRight: "2px solid #D4AF37",
+            }} />
+            <div style={{
+              position: "absolute", bottom: 0, left: 0,
+              width: 24, height: 24,
+              borderBottom: "2px solid #D4AF37",
+              borderLeft: "2px solid #D4AF37",
+            }} />
+            <div style={{
+              position: "absolute", bottom: 0, right: 0,
+              width: 24, height: 24,
+              borderBottom: "2px solid #D4AF37",
+              borderRight: "2px solid #D4AF37",
+            }} />
+
+            {/* Gold glow behind logo */}
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(212,175,55,0.12) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+
+            <img
+              src="/images/logo.png"
+              alt="Ghetto Spirit Entertainment"
               style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.35)",
+                width: "75%",
+                maxWidth: 200,
+                objectFit: "contain",
+                position: "relative",
+                zIndex: 1,
+                filter: "drop-shadow(0 0 16px rgba(212,175,55,0.4))",
               }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Bebas Neue', sans-serif",
-                  fontSize: 28,
-                  color: "#FF2D2D",
-                  textShadow: "0 0 20px #FF2D2D, 0 0 40px rgba(255,45,45,0.5)",
-                  letterSpacing: "0.12em",
-                  textAlign: "center",
-                  lineHeight: 1.2,
-                }}
-              >
-                GHETTO
-                <br />
-                SPIRIT
-              </div>
-            </div>
+            />
           </div>
         </div>
 
@@ -133,37 +179,26 @@ export function MissionVision() {
             transition: "opacity 0.7s ease, transform 0.7s ease",
           }}
         >
-          <h3
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 26,
-              letterSpacing: "0.1em",
-              color: "#D4AF37",
-              margin: "0 0 16px 0",
-            }}
-          >
+          <h3 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 26,
+            letterSpacing: "0.1em",
+            color: "#D4AF37",
+            margin: "0 0 16px 0",
+          }}>
             OUR MISSION
           </h3>
-          <p
-            style={{
-              fontFamily: "'Barlow', sans-serif",
-              fontSize: 14,
-              lineHeight: 1.75,
-              color: "rgba(255,255,255,0.7)",
-              margin: 0,
-            }}
-          >
+          <p style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: 14,
+            lineHeight: 1.75,
+            color: "rgba(255,255,255,0.7)",
+            margin: 0,
+          }}>
             To create opportunities for independent artists, elevate real
             stories, and build a legacy that inspires the world.
           </p>
-          <div
-            style={{
-              width: 32,
-              height: 2,
-              background: "#D4AF37",
-              marginTop: 20,
-            }}
-          />
+          <div style={{ width: 32, height: 2, background: "#D4AF37", marginTop: 20 }} />
         </div>
 
         {/* Vision */}
@@ -175,42 +210,32 @@ export function MissionVision() {
             transition: "opacity 0.7s ease, transform 0.7s ease",
           }}
         >
-          <h3
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 26,
-              letterSpacing: "0.1em",
-              color: "#D4AF37",
-              margin: "0 0 16px 0",
-            }}
-          >
+          <h3 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 26,
+            letterSpacing: "0.1em",
+            color: "#D4AF37",
+            margin: "0 0 16px 0",
+          }}>
             OUR VISION
           </h3>
-          <p
-            style={{
-              fontFamily: "'Barlow', sans-serif",
-              fontSize: 14,
-              lineHeight: 1.75,
-              color: "rgba(255,255,255,0.7)",
-              margin: 0,
-            }}
-          >
+          <p style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: 14,
+            lineHeight: 1.75,
+            color: "rgba(255,255,255,0.7)",
+            margin: 0,
+          }}>
             To be the leading entertainment brand that transforms lives through
             music, culture, and community.
           </p>
-          <div
-            style={{
-              width: 32,
-              height: 2,
-              background: "#D4AF37",
-              marginTop: 20,
-            }}
-          />
+          <div style={{ width: 32, height: 2, background: "#D4AF37", marginTop: 20 }} />
         </div>
 
         {/* Stats */}
         <div
           data-reveal
+          className="mv-stats"
           style={{
             opacity: 0,
             transform: "translateY(24px)",
@@ -221,36 +246,29 @@ export function MissionVision() {
           }}
         >
           {STATS.map((stat) => {
-            const Icon = ICON_MAP[stat.icon];
+            const Icon = ICON_MAP[stat.icon as keyof typeof ICON_MAP];
             return (
-              <div
-                key={stat.label}
-                style={{ display: "flex", alignItems: "center", gap: 14 }}
-              >
+              <div key={stat.label} style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <Icon />
                 <div>
-                  <div
-                    style={{
-                      fontFamily: "'Bebas Neue', sans-serif",
-                      fontSize: 32,
-                      color: "#FFFFFF",
-                      lineHeight: 1,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
+                  <div style={{
+                    fontFamily: "'Bebas Neue', sans-serif",
+                    fontSize: 32,
+                    color: "#FFFFFF",
+                    lineHeight: 1,
+                    letterSpacing: "0.04em",
+                  }}>
                     {stat.value}
                   </div>
-                  <div
-                    style={{
-                      fontFamily: "'Barlow Condensed', sans-serif",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      letterSpacing: "0.18em",
-                      color: "rgba(255,255,255,0.45)",
-                      textTransform: "uppercase",
-                      marginTop: 2,
-                    }}
-                  >
+                  <div style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 600,
+                    fontSize: 11,
+                    letterSpacing: "0.18em",
+                    color: "rgba(255,255,255,0.45)",
+                    textTransform: "uppercase",
+                    marginTop: 2,
+                  }}>
                     {stat.label}
                   </div>
                 </div>

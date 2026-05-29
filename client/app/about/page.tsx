@@ -3,9 +3,8 @@
 import Navbar from "@/components/Navbar";
 import { AboutHero } from "./AboutHero";
 import { MissionVision } from "./MissionVision";
-import { OurStory } from "./OurStory";
-import { TeamSection } from "./TeamSection";
 import { AboutCTA } from "./AboutCTA";
+import { ContactFooter } from "../../components/ContactFooter";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AboutPage() {
@@ -37,9 +36,9 @@ export default function AboutPage() {
 
         <AboutHero />
         <MissionVision />
-        <OurStory />
-        <TeamSection />
+
         <AboutCTA />
+        <ContactFooter />
       </main>
     </>
   );

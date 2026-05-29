@@ -41,13 +41,17 @@
 .hero-bg-image {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background:
     linear-gradient(to right, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.1) 100%),
     url('/contact-hero.jpg') center/cover no-repeat;
   background-color: #1a1510;
 }
 
-.hero-bg-image::before {
+.hero-left > *:not(.hero-bg-image) {
+  position: relative;
+  z-index: 5;
+}.hero-bg-image::before {
   content: '';
   position: absolute;
   inset: 0;

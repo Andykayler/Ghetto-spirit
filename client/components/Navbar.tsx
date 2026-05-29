@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { label: "HOME", href: "/", active: true },
+  { label: "HOME", href: "/" },
   { label: "ABOUT US", href: "/about" },
   { label: "ARTISTS", href: "/artists" },
   { label: "MUSIC & VIDEOS", href: "/music" },
-  { label: "EVENTS & COMPETITIONS", href: "/events" },
-  { label: "GALLERY", href: "/gallery" },
   { label: "CONTACT", href: "/contact" },
 ];
 
@@ -18,7 +17,7 @@ const socialIcons = [
     href: "https://www.instagram.com/ghettospiritent?igsh=MWxnYmg0c3U3Y3Y1NQ==",
     svg: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
       </svg>
     ),
   },
@@ -62,6 +61,12 @@ const socialIcons = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -80,16 +85,12 @@ export default function Navbar() {
           border-bottom: 1px solid rgba(212,160,23,0.18);
           min-height: 64px;
         }
-
-        /* ── LOGO ── */
-       .gs-logo {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-
-        /* ── NAV LINKS ── */
+        .gs-logo {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          flex-shrink: 0;
+        }
         .gs-nav-links {
           display: flex;
           align-items: center;
@@ -109,12 +110,8 @@ export default function Navbar() {
           white-space: nowrap;
           position: relative;
         }
-        .gs-nav-link:hover {
-          color: #D4A017;
-        }
-        .gs-nav-link.active {
-          color: #D4A017;
-        }
+        .gs-nav-link:hover { color: #D4A017; }
+        .gs-nav-link.active { color: #D4A017; }
         .gs-nav-link.active::after {
           content: '';
           position: absolute;
@@ -124,8 +121,6 @@ export default function Navbar() {
           background: #D4A017;
           border-radius: 1px;
         }
-
-        /* ── RIGHT SIDE ── */
         .gs-right {
           display: flex;
           align-items: center;
@@ -144,11 +139,7 @@ export default function Navbar() {
           text-decoration: none;
           transition: color 0.2s;
         }
-        .gs-social-icon:hover {
-          color: #D4A017;
-        }
-
-        /* ── CTA BUTTON ── */
+        .gs-social-icon:hover { color: #D4A017; }
         .gs-cta {
           font-family: 'Barlow Condensed', sans-serif;
           font-weight: 700;
@@ -165,12 +156,7 @@ export default function Navbar() {
           clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
           transition: transform 0.15s, filter 0.15s;
         }
-        .gs-cta:hover {
-          filter: brightness(1.08);
-          transform: scale(1.03);
-        }
-
-        /* ── MOBILE HAMBURGER ── */
+        .gs-cta:hover { filter: brightness(1.08); transform: scale(1.03); }
         .gs-hamburger {
           display: none;
           background: none;
@@ -179,8 +165,6 @@ export default function Navbar() {
           color: #D4A017;
           padding: 4px;
         }
-
-        /* ── MOBILE MENU ── */
         .gs-mobile-menu {
           position: absolute;
           top: 100%;
@@ -209,7 +193,6 @@ export default function Navbar() {
           gap: 16px;
           padding-top: 6px;
         }
-
         @media (max-width: 1023px) {
           .gs-nav-links, .gs-right { display: none; }
           .gs-hamburger { display: flex; }
@@ -219,15 +202,11 @@ export default function Navbar() {
       <nav className="gs-nav">
         {/* LOGO */}
         <a href="/" className="gs-logo">
-           <img
-    src="/images/logo.png"
-    alt="Ghetto Spirit Entertainment"
-    style={{
-      height: "52px",
-      width: "auto",
-      objectFit: "contain",
-    }}
-  />
+          <img
+            src="/images/logo.png"
+            alt="Ghetto Spirit Entertainment"
+            style={{ height: "52px", width: "auto", objectFit: "contain" }}
+          />
         </a>
 
         {/* DESKTOP NAV LINKS */}
@@ -236,7 +215,7 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
-              className={`gs-nav-link${link.active ? " active" : ""}`}
+              className={`gs-nav-link${isActive(link.href) ? " active" : ""}`}
             >
               {link.label}
             </a>
@@ -284,7 +263,7 @@ export default function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                className={`gs-mobile-link${link.active ? " active" : ""}`}
+                className={`gs-mobile-link${isActive(link.href) ? " active" : ""}`}
                 onClick={() => setMenuOpen(false)}
               >
                 {link.label}
