@@ -6,7 +6,8 @@ import { Play, Plus, ArrowLeft } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { doc, getDoc, collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import UploadModal from "../music/upload";   // Correct path
+import UploadModal from "../music/upload";
+import { getSongStreamStats } from "./streamstats";
 
 interface Artist {
   id: string;
@@ -14,9 +15,9 @@ interface Artist {
   image?: string;
   genre?: string;
   bio?: string;
-  streams?: string | number;
   songs?: number;
   joined?: string;
+  status?: string;
 }
 
 interface Song {
@@ -27,7 +28,6 @@ interface Song {
   genre?: string;
   audioUrl?: string;
   coverUrl?: string;
-  streams?: number;
 }
 
 export default function ArtistProfilePage() {
@@ -37,13 +37,14 @@ export default function ArtistProfilePage() {
 
   const [artist, setArtist] = useState<Artist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
+  // songId → stream count sourced from `tracks`
+  const [streamStats, setStreamStats] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   // Fetch Artist Details
   useEffect(() => {
     if (!artistId) return;
-
     const fetchArtist = async () => {
       try {
         const artistDoc = await getDoc(doc(db, "artists", artistId));
@@ -55,25 +56,46 @@ export default function ArtistProfilePage() {
       }
       setLoading(false);
     };
-
     fetchArtist();
   }, [artistId]);
 
-  // Fetch Songs by this Artist
+  // Fetch Songs + real stream counts from `tracks`
   useEffect(() => {
     if (!artistId) return;
 
     const q = query(collection(db, "songs"), where("artistId", "==", artistId));
-    const unsub = onSnapshot(q, (snapshot) => {
+    const unsub = onSnapshot(q, async (snapshot) => {
       const data = snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data(),
       })) as Song[];
       setSongs(data);
+
+      if (data.length > 0) {
+        try {
+          const statsMap = await getSongStreamStats(data.map((s) => s.id));
+          setStreamStats(
+            new Map(Array.from(statsMap.entries()).map(([id, stat]) => [id, stat.streams]))
+          );
+        } catch (err) {
+          console.error("Failed to load stream stats:", err);
+        }
+      } else {
+        setStreamStats(new Map());
+      }
     });
 
     return () => unsub();
   }, [artistId]);
+
+  // Total streams across all this artist's songs — sourced from `tracks`
+  const totalStreams = Array.from(streamStats.values()).reduce((sum, n) => sum + n, 0);
+
+  const formatStreams = (n: number) => {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+    if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+    return String(n);
+  };
 
   if (loading) {
     return (
@@ -102,14 +124,14 @@ export default function ArtistProfilePage() {
       <Sidebar />
 
       <div className="dashboard-main">
-        <button 
+        <button
           onClick={() => router.push("/artists")}
           style={{ display: "flex", alignItems: "center", gap: "8px", color: "#aaa", marginBottom: "1rem" }}
         >
           <ArrowLeft size={20} /> Back to Artists
         </button>
 
-        {/* Spotify-style Hero */}
+        {/* Hero */}
         <div style={{
           height: "420px",
           borderRadius: "20px",
@@ -129,12 +151,36 @@ export default function ArtistProfilePage() {
             <p style={{ color: "#ddd", fontSize: "1.3rem" }}>
               {artist.genre || "Unknown"} • {songs.length} songs
             </p>
+
+            {/* Stats row — streams come from tracks, not the artist doc */}
+            <div style={{ display: "flex", gap: "2.5rem", marginTop: "1rem" }}>
+              <div>
+                <p style={{ color: "#C9A84C", fontSize: "1.4rem", fontWeight: "700", margin: 0 }}>
+                  {formatStreams(totalStreams)}
+                </p>
+                <p style={{ color: "#aaa", fontSize: "0.75rem", letterSpacing: "1px", margin: 0 }}>STREAMS</p>
+              </div>
+              <div>
+                <p style={{ color: "#C9A84C", fontSize: "1.4rem", fontWeight: "700", margin: 0 }}>
+                  {songs.length}
+                </p>
+                <p style={{ color: "#aaa", fontSize: "0.75rem", letterSpacing: "1px", margin: 0 }}>SONGS</p>
+              </div>
+              {artist.joined && (
+                <div>
+                  <p style={{ color: "#C9A84C", fontSize: "1.4rem", fontWeight: "700", margin: 0 }}>
+                    {artist.joined}
+                  </p>
+                  <p style={{ color: "#aaa", fontSize: "0.75rem", letterSpacing: "1px", margin: 0 }}>JOINED</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div style={{ display: "flex", gap: "15px", marginBottom: "2rem" }}>
-          <button 
-            className="add-btn" 
+          <button
+            className="add-btn"
             onClick={() => setShowUploadModal(true)}
             style={{ display: "flex", alignItems: "center", gap: "10px" }}
           >
@@ -167,12 +213,14 @@ export default function ArtistProfilePage() {
                     <td>{index + 1}</td>
                     <td className="song-title-cell">
                       <div className="song-info">
-                        {song.coverUrl && <img src={song.coverUrl} alt="" style={{ width: 45, height: 45, borderRadius: 6 }} />}
+                        {song.coverUrl && (
+                          <img src={song.coverUrl} alt="" style={{ width: 45, height: 45, borderRadius: 6 }} />
+                        )}
                         <span>{song.title}</span>
                       </div>
                     </td>
                     <td>{song.genre || "—"}</td>
-                    <td>{song.streams || 0}</td>
+                    <td>{formatStreams(streamStats.get(song.id) ?? 0)}</td>
                     <td>
                       <button className="action-btn" onClick={() => alert(`Playing: ${song.title}`)}>
                         <Play size={18} />
@@ -186,9 +234,9 @@ export default function ArtistProfilePage() {
         </div>
       </div>
 
-      <UploadModal 
-        isOpen={showUploadModal} 
-        onClose={() => setShowUploadModal(false)} 
+      <UploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
       />
     </div>
   );

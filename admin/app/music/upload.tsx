@@ -1,5 +1,5 @@
 "use client";
-import { X, Upload, Image as ImageIcon, Search, Lock } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Search, Lock, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import "./upload.css";
 
@@ -24,9 +24,10 @@ interface Artist {
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** When passed, the artist field is pre-filled and locked (used from artist profile page) */
   lockedArtist?: Artist;
 }
+
+type UploadType = "song" | "video";
 
 const UPLOAD_URL = "https://upload.titramw.com/upload.php";
 
@@ -61,7 +62,7 @@ async function uploadToServer(
 
     xhr.addEventListener("error", () => reject(new Error("Upload server error")));
     xhr.open("POST", UPLOAD_URL);
-    xhr.timeout = 90000;
+    xhr.timeout = 300000;
     xhr.send(formData);
   });
 }
@@ -71,23 +72,29 @@ export default function UploadModal({
   onClose,
   lockedArtist,
 }: UploadModalProps) {
+  const [uploadType, setUploadType] = useState<UploadType>("song");
+
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [audioFileName, setAudioFileName] = useState<string>("");
   const [coverFileName, setCoverFileName] = useState<string>("");
   const [genre, setGenre] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+
+  const [audioFileName, setAudioFileName] = useState<string>("");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+
+  const [videoFileName, setVideoFileName] = useState<string>("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
 
   const [artistSearch, setArtistSearch] = useState<string>("");
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showArtistList, setShowArtistList] = useState(false);
-
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<string>("");
 
-  // Pre-fill if lockedArtist is passed
   useEffect(() => {
     if (lockedArtist) {
       setSelectedArtist(lockedArtist);
@@ -95,10 +102,8 @@ export default function UploadModal({
     }
   }, [lockedArtist, isOpen]);
 
-  // Only fetch artists list if not locked
   useEffect(() => {
     if (!isOpen || lockedArtist) return;
-
     const fetchArtists = async () => {
       try {
         const snapshot = await getDocs(collection(db, "artists"));
@@ -117,9 +122,7 @@ export default function UploadModal({
   }, [isOpen, lockedArtist]);
 
   const filteredArtists = artists
-    .filter((a) =>
-      a.name.toLowerCase().includes(artistSearch.toLowerCase())
-    )
+    .filter((a) => a.name.toLowerCase().includes(artistSearch.toLowerCase()))
     .sort((a, b) => b.songs - a.songs);
 
   const handleSelectArtist = (artist: Artist) => {
@@ -128,13 +131,19 @@ export default function UploadModal({
     setShowArtistList(false);
   };
 
+  // Fully manual validation — no `required` on file inputs to avoid
+  // the browser silently blocking submission when the other type is active
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!audioFile || !coverFile)
-      return toast.error("Please select both files");
+
+    if (!title?.trim()) return toast.error("Title is required");
+    if (!genre?.trim()) return toast.error("Genre is required");
     if (!selectedArtist) return toast.error("Please select an artist");
-    if (!title?.trim() || !genre?.trim())
-      return toast.error("Title and Genre are required");
+    if (!coverFile) return toast.error("Please select a cover photo");
+    if (uploadType === "song" && !audioFile)
+      return toast.error("Please select an audio file");
+    if (uploadType === "video" && !videoFile)
+      return toast.error("Please select a video file");
 
     setLoading(true);
     setProgress("");
@@ -145,27 +154,52 @@ export default function UploadModal({
         setProgress(`Cover: ${p}`)
       );
 
-      setProgress("Uploading audio...");
-      const audioUrl = await uploadToServer(audioFile, "songs", (p) =>
-        setProgress(`Audio: ${p}`)
-      );
+      if (uploadType === "song") {
+        setProgress("Uploading audio...");
+        const audioUrl = await uploadToServer(audioFile!, "songs", (p) =>
+          setProgress(`Audio: ${p}`)
+        );
 
-      await addDoc(collection(db, "songs"), {
-        title: title.trim(),
-        artist: selectedArtist.name,
-        artistId: selectedArtist.id,
-        genre: genre.trim(),
-        audioUrl,
-        coverUrl,
-        streams: 0,
-        createdAt: serverTimestamp(),
-      });
+        await addDoc(collection(db, "songs"), {
+          title: title.trim(),
+          artist: selectedArtist.name,
+          artistId: selectedArtist.id,
+          genre: genre.trim(),
+          audioUrl,
+          coverUrl,
+          streams: 0,
+          createdAt: serverTimestamp(),
+        });
 
-      await updateDoc(doc(db, "artists", selectedArtist.id), {
-        songs: increment(1),
-      });
+        await updateDoc(doc(db, "artists", selectedArtist.id), {
+          songs: increment(1),
+        });
 
-      toast.success("✅ Song uploaded successfully!");
+        toast.success("✅ Song uploaded successfully!");
+      } else {
+        setProgress("Uploading video...");
+        const videoUrl = await uploadToServer(videoFile!, "videos", (p) =>
+          setProgress(`Video: ${p}`)
+        );
+
+        await addDoc(collection(db, "videos"), {
+          title: title.trim(),
+          artist: selectedArtist.name,
+          artistId: selectedArtist.id,
+          genre: genre.trim(),
+          videoUrl,
+          coverUrl,
+          views: 0,
+          createdAt: serverTimestamp(),
+        });
+
+        await updateDoc(doc(db, "artists", selectedArtist.id), {
+          videos: increment(1),
+        });
+
+        toast.success("✅ Video uploaded successfully!");
+      }
+
       onClose();
       resetForm();
     } catch (error: any) {
@@ -180,16 +214,19 @@ export default function UploadModal({
   const resetForm = () => {
     setTitle("");
     setGenre("");
-    // Don't reset artist search if locked
+    setUploadType("song");
     if (!lockedArtist) {
       setArtistSearch("");
       setSelectedArtist(null);
     }
     setAudioFile(null);
+    setVideoFile(null);
     setCoverFile(null);
     setAudioFileName("");
+    setVideoFileName("");
     setCoverFileName("");
     setCoverPreview(null);
+    setVideoPreview(null);
   };
 
   if (!isOpen) return null;
@@ -199,42 +236,54 @@ export default function UploadModal({
       <div className="upload-modal">
         <div className="modal-header">
           <div className="modal-header-left">
-            <img
-              src="/images/logo.png"
-              alt="Ghetto Spirit Logo"
-              className="modal-logo"
-            />
-            <h2>Upload New Song</h2>
+            <img src="/images/logo.png" alt="Logo" className="modal-logo" />
+            <h2>Upload {uploadType === "song" ? "New Song" : "New Video"}</h2>
           </div>
           <button className="close-modal-btn" onClick={onClose}>
             <X size={26} />
           </button>
         </div>
 
+        {/* Upload Type Toggle */}
+        <div className="upload-type-toggle">
+          <button
+            type="button"
+            className={`toggle-btn ${uploadType === "song" ? "active" : ""}`}
+            onClick={() => setUploadType("song")}
+          >
+            <Upload size={16} /> Song
+          </button>
+          <button
+            type="button"
+            className={`toggle-btn ${uploadType === "video" ? "active" : ""}`}
+            onClick={() => setUploadType("video")}
+          >
+            <Video size={16} /> Video
+          </button>
+        </div>
+
         <div className="modal-content">
-          <form className="upload-form" onSubmit={handleSubmit}>
-            {/* Song Title */}
+          <form className="upload-form" onSubmit={handleSubmit} noValidate>
+            {/* Title */}
             <div className="form-group">
               <label>
-                Song Title <span className="required">*</span>
+                {uploadType === "song" ? "Song" : "Video"} Title{" "}
+                <span className="required">*</span>
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter song title"
-                required
+                placeholder={`Enter ${uploadType} title`}
               />
             </div>
 
-            {/* Artist — locked or searchable */}
+            {/* Artist */}
             <div className="form-group">
               <label>
                 Artist <span className="required">*</span>
               </label>
-
               {lockedArtist ? (
-                /* Locked: just show a read-only pill */
                 <div className="locked-artist-field">
                   <Lock size={16} />
                   <span>{lockedArtist.name}</span>
@@ -252,10 +301,8 @@ export default function UploadModal({
                         setShowArtistList(true);
                       }}
                       onFocus={() => setShowArtistList(true)}
-                      required
                     />
                   </div>
-
                   {showArtistList && artistSearch && (
                     <div className="artist-dropdown">
                       {filteredArtists.length > 0 ? (
@@ -278,7 +325,6 @@ export default function UploadModal({
                       )}
                     </div>
                   )}
-
                   {selectedArtist && (
                     <p className="selected-artist">✓ {selectedArtist.name}</p>
                   )}
@@ -286,32 +332,59 @@ export default function UploadModal({
               )}
             </div>
 
-            {/* Audio & Cover */}
+            {/* File inputs */}
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Audio File <span className="required">*</span>
+                  {uploadType === "song" ? "Audio File" : "Video File"}{" "}
+                  <span className="required">*</span>
                 </label>
                 <div className="file-input-wrapper">
-                  <input
-                    type="file"
-                    accept="audio/mp3,audio/wav,audio/mpeg"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) {
-                        setAudioFile(f);
-                        setAudioFileName(f.name);
-                      }
-                    }}
-                    required
-                  />
+                  {uploadType === "song" ? (
+                    <input
+                      type="file"
+                      accept="audio/mp3,audio/wav,audio/mpeg"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) { setAudioFile(f); setAudioFileName(f.name); }
+                      }}
+                    />
+                  ) : (
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) {
+                          setVideoFile(f);
+                          setVideoFileName(f.name);
+                          setVideoPreview(URL.createObjectURL(f));
+                        }
+                      }}
+                    />
+                  )}
                   <div className="file-placeholder">
-                    <Upload size={20} />
-                    <span>{audioFileName || "Choose Audio"}</span>
+                    {uploadType === "song" ? (
+                      <Upload size={20} />
+                    ) : (
+                      <Video size={20} />
+                    )}
+                    <span>
+                      {uploadType === "song"
+                        ? audioFileName || "Choose Audio"
+                        : videoFileName || "Choose Video"}
+                    </span>
                   </div>
                 </div>
+
+                {uploadType === "video" && videoPreview && (
+                  <div className="cover-preview video-preview">
+                    <video src={videoPreview} controls muted />
+                  </div>
+                )}
               </div>
 
+              {/* Cover Photo */}
               <div className="form-group">
                 <label>
                   Cover Photo <span className="required">*</span>
@@ -331,7 +404,6 @@ export default function UploadModal({
                         reader.readAsDataURL(f);
                       }
                     }}
-                    required
                   />
                   <div className="file-placeholder">
                     <ImageIcon size={20} />
@@ -357,7 +429,6 @@ export default function UploadModal({
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
                 placeholder="e.g. Hip Hop"
-                required
               />
               <datalist id="genre-list">
                 <option value="Hip Hop" />
@@ -388,7 +459,9 @@ export default function UploadModal({
                 className="upload-submit-btn"
                 disabled={loading}
               >
-                {loading ? "Uploading..." : "Upload Song"}
+                {loading
+                  ? "Uploading..."
+                  : `Upload ${uploadType === "song" ? "Song" : "Video"}`}
               </button>
             </div>
           </form>

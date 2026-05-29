@@ -4,6 +4,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getSongStreamStats, getArtistStreamStats } from "./streamstats";
 import "./analytics.css";
 
 interface GenreStat {
@@ -25,44 +26,43 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        // Artists
+        // ── Artists: only need count + verified count from artists collection ──
         const artistsSnap = await getDocs(collection(db, "artists"));
         let verifiedCount = 0;
-        const artistPerformance: any[] = [];
-
         artistsSnap.forEach((doc) => {
-          const data = doc.data();
-          if (data.status === "verified") verifiedCount++;
-          artistPerformance.push({
-            name: data.name,
-            streams: data.totalStreams || 0,
-            songs: data.songs || 0,
-          });
+          if (doc.data().status === "verified") verifiedCount++;
         });
-
         setTotalArtists(artistsSnap.size);
         setVerifiedArtists(verifiedCount);
 
-        // Songs
+        // ── Songs metadata ──
         const songsSnap = await getDocs(collection(db, "songs"));
+
+        // ── Real stream counts for all songs from `tracks` ──
+        const songIds = songsSnap.docs.map((d) => d.id);
+        const statsMap = songIds.length > 0
+          ? await getSongStreamStats(songIds)
+          : new Map();
+
         let totalStreams = 0;
         let thisMonthCount = 0;
         const genreMap = new Map<string, { count: number; streams: number }>();
-
         const now = new Date();
         const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         songsSnap.forEach((doc) => {
           const data = doc.data();
-          const streams = data.streams || 0;
+          const streams = statsMap.get(doc.id)?.streams ?? 0;
           totalStreams += streams;
 
+          // Genre accumulation with real stream counts
           const genre = data.genre || "Unknown";
           if (!genreMap.has(genre)) genreMap.set(genre, { count: 0, streams: 0 });
           const g = genreMap.get(genre)!;
           g.count++;
           g.streams += streams;
 
+          // Upload date (lives on songs, fine to read here)
           if (data.createdAt) {
             const songDate = data.createdAt.toDate
               ? data.createdAt.toDate()
@@ -76,6 +76,7 @@ export default function AnalyticsPage() {
         );
         setSongsThisMonth(thisMonthCount);
 
+        // ── Genre stats ──
         const totalSongs = songsSnap.size;
         const genresArray: GenreStat[] = Array.from(genreMap.entries())
           .map(([genre, stats]) => ({
@@ -87,13 +88,12 @@ export default function AnalyticsPage() {
           }))
           .sort((a, b) => b.streams - a.streams)
           .slice(0, 8);
-
         setGenreStats(genresArray);
 
-        const sortedArtists = artistPerformance
-          .sort((a, b) => b.streams - a.streams)
-          .slice(0, 6);
-        setTopPerformingArtists(sortedArtists);
+        // ── Top performing artists via service function ──
+        const topArtists = await getArtistStreamStats(6);
+        setTopPerformingArtists(topArtists);
+
       } catch (error) {
         console.error("Analytics error:", error);
       } finally {
