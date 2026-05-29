@@ -2,7 +2,6 @@
 import { X, Upload, Image as ImageIcon, Search, Lock, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import "./upload.css";
-
 import {
   collection,
   addDoc,
@@ -30,6 +29,11 @@ interface UploadModalProps {
 type UploadType = "song" | "video";
 
 const UPLOAD_URL = "https://upload.titramw.com/upload.php";
+
+// Accepted extensions as dot-prefixed strings (more reliable cross-browser than MIME types)
+const AUDIO_ACCEPT = ".mp3,.wav,.m4a,.aac,.ogg,.flac";
+const VIDEO_ACCEPT = ".mp4,.mov,.avi,.mkv,.webm,.3gp,.m4v,.wmv,.flv,.ts";
+const IMAGE_ACCEPT = ".jpg,.jpeg,.png,.webp";
 
 async function uploadToServer(
   file: File,
@@ -62,7 +66,7 @@ async function uploadToServer(
 
     xhr.addEventListener("error", () => reject(new Error("Upload server error")));
     xhr.open("POST", UPLOAD_URL);
-    xhr.timeout = 300000;
+    xhr.timeout = 300000; // 5 min timeout for large videos
     xhr.send(formData);
   });
 }
@@ -73,25 +77,20 @@ export default function UploadModal({
   lockedArtist,
 }: UploadModalProps) {
   const [uploadType, setUploadType] = useState<UploadType>("song");
-
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverFileName, setCoverFileName] = useState<string>("");
   const [genre, setGenre] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
-
   const [audioFileName, setAudioFileName] = useState<string>("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
-
   const [videoFileName, setVideoFileName] = useState<string>("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-
   const [artistSearch, setArtistSearch] = useState<string>("");
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [showArtistList, setShowArtistList] = useState(false);
   const [artists, setArtists] = useState<Artist[]>([]);
-
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<string>("");
 
@@ -131,11 +130,8 @@ export default function UploadModal({
     setShowArtistList(false);
   };
 
-  // Fully manual validation — no `required` on file inputs to avoid
-  // the browser silently blocking submission when the other type is active
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!title?.trim()) return toast.error("Title is required");
     if (!genre?.trim()) return toast.error("Genre is required");
     if (!selectedArtist) return toast.error("Please select an artist");
@@ -159,7 +155,6 @@ export default function UploadModal({
         const audioUrl = await uploadToServer(audioFile!, "songs", (p) =>
           setProgress(`Audio: ${p}`)
         );
-
         await addDoc(collection(db, "songs"), {
           title: title.trim(),
           artist: selectedArtist.name,
@@ -170,18 +165,15 @@ export default function UploadModal({
           streams: 0,
           createdAt: serverTimestamp(),
         });
-
         await updateDoc(doc(db, "artists", selectedArtist.id), {
           songs: increment(1),
         });
-
         toast.success("✅ Song uploaded successfully!");
       } else {
         setProgress("Uploading video...");
         const videoUrl = await uploadToServer(videoFile!, "videos", (p) =>
           setProgress(`Video: ${p}`)
         );
-
         await addDoc(collection(db, "videos"), {
           title: title.trim(),
           artist: selectedArtist.name,
@@ -192,11 +184,9 @@ export default function UploadModal({
           views: 0,
           createdAt: serverTimestamp(),
         });
-
         await updateDoc(doc(db, "artists", selectedArtist.id), {
           videos: increment(1),
         });
-
         toast.success("✅ Video uploaded successfully!");
       }
 
@@ -343,7 +333,7 @@ export default function UploadModal({
                   {uploadType === "song" ? (
                     <input
                       type="file"
-                      accept="audio/mp3,audio/wav,audio/mpeg"
+                      accept={AUDIO_ACCEPT}
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (f) { setAudioFile(f); setAudioFileName(f.name); }
@@ -352,7 +342,7 @@ export default function UploadModal({
                   ) : (
                     <input
                       type="file"
-                      accept="video/mp4,video/webm,video/quicktime"
+                      accept={VIDEO_ACCEPT}
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (f) {
@@ -376,7 +366,6 @@ export default function UploadModal({
                     </span>
                   </div>
                 </div>
-
                 {uploadType === "video" && videoPreview && (
                   <div className="cover-preview video-preview">
                     <video src={videoPreview} controls muted />
@@ -392,7 +381,7 @@ export default function UploadModal({
                 <div className="file-input-wrapper">
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept={IMAGE_ACCEPT}
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) {
