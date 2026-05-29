@@ -30,7 +30,6 @@ export function FeaturedSongs() {
         const fetched: Song[] = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          // normalise: songs use coverUrl, but Track expects thumbnail too
           thumbnail: (doc.data() as any).coverUrl,
         } as Song));
         console.log("✅ Songs loaded:", fetched.length);
@@ -49,7 +48,6 @@ export function FeaturedSongs() {
     ? songs
     : songs.filter(s => s.genre === active);
 
-  // Animate cards when they enter view or filter changes
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -78,9 +76,7 @@ export function FeaturedSongs() {
     return () => observer.disconnect();
   }, [filteredSongs]);
 
-  // When a song is played, set the full filtered list as the queue
   const handlePlay = (song: Song) => {
-    // Normalise all songs for the queue with thumbnail alias
     const trackQueue: Track[] = filteredSongs.map(s => ({
       ...s,
       thumbnail: s.coverUrl,
@@ -131,12 +127,12 @@ export function FeaturedSongs() {
                 key={cat}
                 onClick={() => setActive(cat)}
                 style={{
-                  padding: "8px 16px",
+                  padding: "6px 12px",
                   background: active === cat ? "#D4AF37" : "transparent",
                   color: active === cat ? "#000" : "rgba(255,255,255,0.6)",
                   border: "none",
                   fontWeight: 600,
-                  fontSize: 13,
+                  fontSize: 12,
                   cursor: "pointer",
                   borderRadius: 4,
                   transition: "background 0.2s, color 0.2s",
@@ -148,8 +144,8 @@ export function FeaturedSongs() {
           </div>
         </div>
 
-        {/* Songs Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 24 }}>
+        {/* Songs Grid — minmax reduced from 220px → 160px, gap from 24 → 14 */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 14 }}>
           {filteredSongs.map((song, i) => (
             <SongCard
               key={song.id}
@@ -222,14 +218,14 @@ function SongCard({ song, index, isCurrent, isPlaying, onPlay }: {
           }}
         >
           <div style={{
-            width: 58,
-            height: 58,
+            width: 42,
+            height: 42,
             borderRadius: "50%",
             background: isPlaying ? "#D4AF37" : "rgba(255,255,255,0.18)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: isPlaying ? 20 : 22,
+            fontSize: isPlaying ? 16 : 17,
           }}>
             {isPlaying ? "⏸" : "▶"}
           </div>
@@ -239,12 +235,12 @@ function SongCard({ song, index, isCurrent, isPlaying, onPlay }: {
         {isCurrent && isPlaying && (
           <div style={{
             position: "absolute",
-            top: 10,
-            right: 10,
+            top: 7,
+            right: 7,
             display: "flex",
             alignItems: "flex-end",
             gap: 2,
-            height: 16,
+            height: 14,
           }}>
             {[0, 1, 2].map((i) => (
               <div
@@ -268,21 +264,22 @@ function SongCard({ song, index, isCurrent, isPlaying, onPlay }: {
         )}
       </div>
 
-      <div style={{ padding: "14px" }}>
-        <div style={{ fontSize: 16.5, fontWeight: 700, color: isCurrent ? "#D4AF37" : "#fff", lineHeight: 1.2 }}>
+      {/* Card info — padding reduced from 14px → 10px, fonts tightened */}
+      <div style={{ padding: "10px" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: isCurrent ? "#D4AF37" : "#fff", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {song.title}
         </div>
-        <div style={{ color: "#aaa", fontSize: 13.5, marginTop: 4 }}>
+        <div style={{ color: "#aaa", fontSize: 11.5, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {song.artist}
         </div>
         {song.genre && (
           <div style={{
-            marginTop: 8,
+            marginTop: 6,
             display: "inline-block",
-            padding: "2px 8px",
+            padding: "2px 6px",
             border: "1px solid rgba(212,175,55,0.3)",
             color: "#D4AF37",
-            fontSize: 10,
+            fontSize: 9,
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             fontWeight: 600,

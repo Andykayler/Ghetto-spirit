@@ -41,9 +41,9 @@ export function ArtistCard({ artist }: { artist: Artist }) {
         .social-btn:hover { color: #C9A84C !important; }
 
         @media (max-width: 600px) {
-          .artist-card-name { font-size: 1.1rem !important; }
-          .artist-card-body { padding: 8px 10px 10px !important; }
-          .view-profile-btn { height: 26px !important; font-size: 0.65rem !important; }
+          .artist-card-name { font-size: 0.9rem !important; }
+          .artist-card-body { padding: 6px 8px 8px !important; }
+          .view-profile-btn { height: 22px !important; font-size: 0.6rem !important; }
         }
       `}</style>
 
@@ -58,8 +58,8 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           cursor: "pointer",
         }}
       >
-        {/* Image */}
-        <div style={{ position: "relative", width: "100%", paddingBottom: "118%", flexShrink: 0 }}>
+        {/* Image — reduced from 118% to 100% for shorter card */}
+        <div style={{ position: "relative", width: "100%", paddingBottom: "100%", flexShrink: 0 }}>
           <img
             src={imageSrc}
             alt={artist.name}
@@ -85,21 +85,24 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           />
         </div>
 
-        {/* Body */}
+        {/* Body — tightened padding and font sizes */}
         <div
           className="artist-card-body"
-          style={{ padding: "10px 14px 12px", display: "flex", flexDirection: "column" }}
+          style={{ padding: "8px 10px 10px", display: "flex", flexDirection: "column" }}
         >
           {/* Name + Crown */}
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 1 }}>
             <span
               className="artist-card-name"
               style={{
                 fontFamily: "'Bebas Neue', cursive",
-                fontSize: "1.35rem",
+                fontSize: "1.1rem",
                 color: "#ffffff",
                 letterSpacing: "0.04em",
                 lineHeight: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {artist.name}
@@ -111,12 +114,12 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           <p
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "0.68rem",
+              fontSize: "0.6rem",
               fontWeight: 600,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: "#666",
-              margin: "0 0 10px",
+              margin: "0 0 7px",
             }}
           >
             {artist.genre}
@@ -131,25 +134,25 @@ export function ArtistCard({ artist }: { artist: Artist }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 8,
-              height: 30,
+              gap: 6,
+              height: 26,
               border: "1px solid #C9A84C",
               background: "transparent",
               color: "#C9A84C",
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "0.7rem",
+              fontSize: "0.62rem",
               fontWeight: 700,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               cursor: "pointer",
-              marginBottom: 10,
+              marginBottom: 7,
             }}
           >
             VIEW PROFILE <ArrowRightIcon />
           </button>
 
           {/* Socials */}
-          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             {SOCIAL_ICONS.map((Icon, i) => (
               <button
                 key={i}
@@ -158,7 +161,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  padding: "4px 5px",
+                  padding: "3px 4px",
                   color: "#4a4a4a",
                   display: "flex",
                   alignItems: "center",
