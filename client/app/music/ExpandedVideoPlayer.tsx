@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { Video } from "./FeaturedSongs";
+import type { Video } from "./FeaturedVideos";
 import {
   subscribeToVideoComments,
   subscribeToVideoStats,
